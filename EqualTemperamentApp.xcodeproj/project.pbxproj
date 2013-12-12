@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F5A589318599EFB00E62735 /* DataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5A589218599EFB00E62735 /* DataModel.m */; };
 		3F94139018556EA40067CFBF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94138F18556EA40067CFBF /* Foundation.framework */; };
 		3F94139218556EA40067CFBF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94139118556EA40067CFBF /* CoreGraphics.framework */; };
 		3F94139418556EA40067CFBF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94139318556EA40067CFBF /* UIKit.framework */; };
@@ -175,6 +176,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3F5A589118599EFB00E62735 /* DataModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataModel.h; sourceTree = "<group>"; };
+		3F5A589218599EFB00E62735 /* DataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataModel.m; sourceTree = "<group>"; };
 		3F94138C18556EA40067CFBF /* EqualTemperamentApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EqualTemperamentApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F94138F18556EA40067CFBF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3F94139118556EA40067CFBF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -509,6 +512,8 @@
 				3FAA7219185846290041268E /* HelpViewController.h */,
 				3FAA721A185846290041268E /* HelpViewController.m */,
 				3FAA721B185846290041268E /* HelpViewController.xib */,
+				3F5A589118599EFB00E62735 /* DataModel.h */,
+				3F5A589218599EFB00E62735 /* DataModel.m */,
 				3F9413AA18556EA40067CFBF /* Images.xcassets */,
 				3F94139618556EA40067CFBF /* Supporting Files */,
 			);
@@ -972,6 +977,7 @@
 				3FAA71B0185841EC0041268E /* sine.c in Sources */,
 				3FAA7202185841EC0041268E /* StkUdpSocket.cpp in Sources */,
 				3FAA71C7185841EC0041268E /* Chorus.cpp in Sources */,
+				3F5A589318599EFB00E62735 /* DataModel.m in Sources */,
 				3F9413D31855A0F70067CFBF /* mo_audio.mm in Sources */,
 				3FAA71C9185841EC0041268E /* Delay.cpp in Sources */,
 				3FAA719C185841EC0041268E /* makewavs.c in Sources */,

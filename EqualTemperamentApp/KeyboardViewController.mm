@@ -10,6 +10,7 @@
 #import "SettingsViewController.h"
 #import "HelpViewController.h"
 #import "mo_audio.h"
+#import "DataModel.h"
 
 #define SRATE 44100
 #define FRAMESIZE 128
@@ -35,16 +36,23 @@ const CGFloat marginBetweenButtons = 5.f;
 @interface KeyboardViewController () <UIScrollViewDelegate> {
   struct AudioData audioData;
 }
-
 @property (strong, nonatomic) UIScrollView *scrollView;
+@property (strong, nonatomic) DataModel *dataModel;
 
 @end
 
 @implementation KeyboardViewController {
   NSUInteger _numberOfOctaves;
-  NSUInteger _tonesPerOctave;
   NSUInteger _totalKeysInKeyboard;
   NSUInteger _perfectFifth;
+  
+  NSUInteger _tonesPerOctave;
+  NSString *_instrument;
+  NSString *_keyCharacter;
+  NSString *_keyboardStyle;
+  NSString *_colourStyle;
+  NSString *_userButtonsPosition;
+  
   float _semitoneInterval;
   float _lowestTone;
   UIColor *_backgroundColour;
@@ -56,18 +64,61 @@ const CGFloat marginBetweenButtons = 5.f;
   _backgroundColour = [UIColor colorWithRed:.2f green:.2f blue:.2f alpha:1.f];
   [super viewDidLoad];
   
-  [self establishMusicalValues];
-  [self findPerfectFifth];
+    // Bennett-tweaked constants
+  _numberOfOctaves = 2;
+  _lowestTone = 220.f;
+  
+    // instantiates self.dataModel only on very first launch
+  NSString *path = [self dataFilePath];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+    [self loadSettingsFromPath:path];
+  } else {
+    self.dataModel = [[DataModel alloc] init];
+    self.dataModel.tonesPerOctave = @12;
+    self.dataModel.instrument = @"piano";
+    self.dataModel.keyCharacter = @"numbered";
+    self.dataModel.keyboardStyle = @"whiteBlack";
+    self.dataModel.colourStyle = @"fifthWheel";
+    self.dataModel.userButtonsPosition = @"right";
+  }
+  [self updateKeyboardWithChangedDataModel:self.dataModel];
   
   audioData.myMandolin = new Mandolin(20);
     // init the MoAudio layer
   MoAudio::init(SRATE, FRAMESIZE, NUMCHANNELS);
     // start the audio layer, registering a callback method
   MoAudio::start(audioCallback, &audioData);
+  
+  NSLog(@"Documents folder is %@", [self documentsDirectory]);
+  NSLog(@"Data file path is %@", [self dataFilePath]);
 }
 
   // app doesn't know it's in landscape mode until this point
 -(void)viewDidAppear:(BOOL)animated {
+}
+
+-(void)viewWillLayoutSubviews {
+}
+
+-(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel {
+  if (self.scrollView) {
+    [self.scrollView removeFromSuperview];
+  }
+  _tonesPerOctave = [self.dataModel.tonesPerOctave integerValue];
+  _instrument = self.dataModel.instrument;
+  _keyCharacter = self.dataModel.keyCharacter;
+  _keyboardStyle = self.dataModel.keyboardStyle;
+  _colourStyle = self.dataModel.colourStyle;
+  _userButtonsPosition = self.dataModel.userButtonsPosition;
+  
+  [self saveSettings];
+  [self establishValuesFromTonesPerOctave];
+  [self placeScrollView];
+  [self layoutKeys];
+  [self layoutButtons];
+}
+
+-(void)placeScrollView {
   self.scrollView = [[UIScrollView alloc] init];
   self.scrollView.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
   self.scrollView.backgroundColor = _backgroundColour;
@@ -82,11 +133,6 @@ const CGFloat marginBetweenButtons = 5.f;
   
   self.scrollView.delegate = self;
   [self.view addSubview:self.scrollView];
-}
-
--(void)viewWillLayoutSubviews {
-  [self layoutKeys];
-  [self layoutButtons];
 }
 
   // TODO: capture touches in container view
@@ -135,6 +181,8 @@ const CGFloat marginBetweenButtons = 5.f;
 
 -(void)settingsButtonPressed:(UIButton *)sender {
   SettingsViewController *settingsVC = [[SettingsViewController alloc] initWithNibName:@"SettingsViewController" bundle:nil];
+  settingsVC.dataModel = self.dataModel;
+  settingsVC.delegate = self;
   [self presentViewController:settingsVC animated:YES completion:nil];
 }
 
@@ -143,23 +191,12 @@ const CGFloat marginBetweenButtons = 5.f;
   [self presentViewController:helpVC animated:YES completion:nil];
 }
 
--(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-  if ([segue.identifier isEqualToString:@"SegueToSettings"]) {
-    
-  }
-}
-
 #pragma mark - musical logic
 
--(void)establishMusicalValues {
-    // adjust this as necessary
-  _numberOfOctaves = 2;
-  _lowestTone = 220.f;
-    // this will later be based on user input
-  _tonesPerOctave = 12;
+-(void)establishValuesFromTonesPerOctave {
   _totalKeysInKeyboard = (_numberOfOctaves * _tonesPerOctave) + 1;
-  
   _semitoneInterval = pow(2.f, (1.f / _tonesPerOctave));
+  [self findPerfectFifth];
 }
 
 -(void)findPerfectFifth {
@@ -244,7 +281,7 @@ const CGFloat marginBetweenButtons = 5.f;
   float frequency = _lowestTone * pow(2.f, (sender.tag - 1000.f) / _tonesPerOctave);
     //  NSLog(@"frequency %f", frequency);
   audioData.myMandolin->setFrequency(frequency);
-  audioData.myMandolin->pluck(1);
+  audioData.myMandolin->pluck(0.7f);
 }
 
 -(void)keyLifted:(UIButton *)sender {
@@ -263,6 +300,32 @@ const CGFloat marginBetweenButtons = 5.f;
       }
     }
   }
+}
+
+#pragma mark - directory methods
+
+-(NSString *)documentsDirectory {
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  return [paths firstObject];
+}
+
+-(NSString *)dataFilePath {
+  return [[self documentsDirectory] stringByAppendingPathComponent:@"EqualTemperament.plist"];
+}
+
+-(void)saveSettings {
+  NSMutableData *data = [[NSMutableData alloc] init];
+  NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+  [archiver encodeObject:self.dataModel forKey:@"dataModel"];
+  [archiver finishEncoding];
+  [data writeToFile:[self dataFilePath] atomically:YES];
+}
+   
+-(void)loadSettingsFromPath:(NSString *)path {
+  NSData *data = [[NSData alloc] initWithContentsOfFile:path];
+  NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
+  self.dataModel = [unarchiver decodeObjectForKey:@"dataModel"];
+  [unarchiver finishDecoding];
 }
 
 #pragma mark - app methods
