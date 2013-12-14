@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3F5A589318599EFB00E62735 /* DataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5A589218599EFB00E62735 /* DataModel.m */; };
+		3F7E3627185ABB4E00335286 /* Key.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F7E3626185ABB4E00335286 /* Key.m */; };
 		3F94139018556EA40067CFBF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94138F18556EA40067CFBF /* Foundation.framework */; };
 		3F94139218556EA40067CFBF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94139118556EA40067CFBF /* CoreGraphics.framework */; };
 		3F94139418556EA40067CFBF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94139318556EA40067CFBF /* UIKit.framework */; };
@@ -178,6 +179,9 @@
 /* Begin PBXFileReference section */
 		3F5A589118599EFB00E62735 /* DataModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataModel.h; sourceTree = "<group>"; };
 		3F5A589218599EFB00E62735 /* DataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataModel.m; sourceTree = "<group>"; };
+		3F7E3625185ABB4E00335286 /* Key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Key.h; sourceTree = "<group>"; };
+		3F7E3626185ABB4E00335286 /* Key.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Key.m; sourceTree = "<group>"; };
+		3F7E3628185B283700335286 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		3F94138C18556EA40067CFBF /* EqualTemperamentApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EqualTemperamentApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F94138F18556EA40067CFBF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3F94139118556EA40067CFBF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -488,6 +492,7 @@
 		3F94138E18556EA40067CFBF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3F7E3628185B283700335286 /* QuartzCore.framework */,
 				3FAA709E185841EB0041268E /* MoMu-STK-1.0.0 */,
 				3F9413CD1855A0C30067CFBF /* AudioToolbox.framework */,
 				3F94138F18556EA40067CFBF /* Foundation.framework */,
@@ -512,6 +517,8 @@
 				3FAA7219185846290041268E /* HelpViewController.h */,
 				3FAA721A185846290041268E /* HelpViewController.m */,
 				3FAA721B185846290041268E /* HelpViewController.xib */,
+				3F7E3625185ABB4E00335286 /* Key.h */,
+				3F7E3626185ABB4E00335286 /* Key.m */,
 				3F5A589118599EFB00E62735 /* DataModel.h */,
 				3F5A589218599EFB00E62735 /* DataModel.m */,
 				3F9413AA18556EA40067CFBF /* Images.xcassets */,
@@ -1051,6 +1058,7 @@
 				3FAA71C6185841EC0041268E /* Brass.cpp in Sources */,
 				3FAA720A185841EC0041268E /* Voicer.cpp in Sources */,
 				3FAA719A185841EC0041268E /* makefunc.c in Sources */,
+				3F7E3627185ABB4E00335286 /* Key.m in Sources */,
 				3FAA709C1858413A0041268E /* KeyboardViewController.mm in Sources */,
 				3FAA71BF185841EC0041268E /* BiQuad.cpp in Sources */,
 				3FAA71BE185841EC0041268E /* BeeThree.cpp in Sources */,

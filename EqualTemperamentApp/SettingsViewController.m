@@ -55,20 +55,20 @@
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   
   NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
-  for (int i = 2; i <= 36; i++) {
+  for (int i = 2; i <= 72; i++) {
     [pickerTonesTemp addObject:[NSNumber numberWithInt:i]];
   }
   _pickerTones = [NSArray arrayWithArray:pickerTonesTemp];
   self.tonesPerOctavePicker.delegate = self;
   [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:NO];
 
-  _tonesPerOctaveButtons = @[self.twelveButton, self.fiveButton, self.sevenButton, self.fifteenButton, self.seventeenButton,
-                             self.nineteenButton, self.twentyTwoButton, self.twentyFourButton, self.thirtyOneButton];
+  _tonesPerOctaveButtons = @[self.twelveButton, self.seventeenButton, self.nineteenButton,
+                             self.twentyFourButton, self.thirtyOneButton, self.fortyOneButton];
   _instrumentButtons = @[self.pianoButton, self.violinButton, self.steelpanButton];
-  _keyCharacterButtons = @[self.numberedKeyButton, self.accidentalKeyButton, self.blankKeyButton];
-  _keyboardStyleButtons = @[self.whiteBlackLayoutButton, self.justWhiteLayoutButton, self.gridLayoutButton];
+  _keyCharacterButtons = @[self.numberedKeyButton, self.blankKeyButton];
+  _keyboardStyleButtons = @[self.whiteBlackLayoutButton, self.gridLayoutButton];
   _colourStyleButtons = @[self.fifthWheelColourButton, self.stepwiseColourButton, self.noColourButton];
-  _userButtons = @[self.userButtonsRightButton, self.userButtonsLeftButton];
+  _userButtons = @[self.userButtonsTopRightButton, self.userButtonsTopLeftButton, self.userButtonsBottomRightButton, self.userButtonsBottomLeftButton];
   _allButtonArrays = @[_tonesPerOctaveButtons, _instrumentButtons, _keyCharacterButtons, _keyboardStyleButtons, _colourStyleButtons, _userButtons, _instrumentButtons];
   
   for (NSArray *buttonsArray in _allButtonArrays) {
@@ -82,25 +82,10 @@
 -(void)musicButtonTapped:(UIButton *)sender {
 
   if ([_tonesPerOctaveButtons containsObject:sender]) {
-    if (sender == self.fiveButton) {
-      if (_tonesPerOctave != 5) {
-        _tonesPerOctave = 5;
-        _changesMade = YES;
-      }
-    } else if (sender == self.sevenButton) {
-      if (_tonesPerOctave != 7) {
-        _tonesPerOctave = 7;
-        _changesMade = YES;
-      }
-    } else if (sender == self.twelveButton) {
+    if (sender == self.twelveButton) {
       if (_tonesPerOctave != 12) {
         _tonesPerOctave = 12;
         
-        _changesMade = YES;
-      }
-    } else if (sender == self.fifteenButton) {
-      if (_tonesPerOctave != 15) {
-        _tonesPerOctave = 15;
         _changesMade = YES;
       }
     } else if (sender == self.seventeenButton) {
@@ -113,11 +98,6 @@
         _tonesPerOctave = 19;
         _changesMade = YES;
       }
-    } else if (sender == self.twentyTwoButton) {
-      if (_tonesPerOctave != 22) {
-        _tonesPerOctave = 22;
-        _changesMade = YES;
-      }
     } else if (sender == self.twentyFourButton) {
       if (_tonesPerOctave != 24) {
         _tonesPerOctave = 24;
@@ -128,15 +108,23 @@
         _tonesPerOctave = 31;
         _changesMade = YES;
       }
+    } else if (sender == self.fortyOneButton) {
+      if (_tonesPerOctave != 41) {
+        _tonesPerOctave = 41;
+        _changesMade = YES;
+      }
     }
     if (_changesMade) {
+      
       for (UIButton *button in _tonesPerOctaveButtons) {
         if (button == sender) {
           button.selected = YES;
+            // a custom tonesPerOctave button selected
+          self.whiteBlackLayoutButton.enabled = YES;
+          [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:YES];
         } else {
           button.selected = NO;
         }
-        [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:YES];
       }
     }
   }
@@ -169,16 +157,10 @@
     }
   }
   
-  
   if ([_keyCharacterButtons containsObject:sender]) {
     if (sender == self.numberedKeyButton) {
       if (![_keyCharacter isEqualToString:@"numbered"]) {
         _keyCharacter = @"numbered";
-        _changesMade = YES;
-      }
-    } else if (sender == self.accidentalKeyButton) {
-      if (![_keyCharacter isEqualToString:@"accidental"]) {
-        _keyCharacter = @"accidental";
         _changesMade = YES;
       }
     } else if (sender == self.blankKeyButton) {
@@ -202,11 +184,6 @@
     if (sender == self.whiteBlackLayoutButton) {
       if (![_keyboardStyle isEqualToString:@"whiteBlack"]) {
         _keyboardStyle = @"whiteBlack";
-        _changesMade = YES;
-      }
-    } else if (sender == self.justWhiteLayoutButton) {
-      if (![_keyboardStyle isEqualToString:@"justWhite"]) {
-        _keyboardStyle = @"justWhite";
         _changesMade = YES;
       }
     } else if (sender == self.gridLayoutButton) {
@@ -255,14 +232,24 @@
   }
 
   if ([_userButtons containsObject:sender]) {
-    if (sender == self.userButtonsRightButton) {
-      if (![_userButtonsPosition isEqualToString:@"right"]) {
-        _userButtonsPosition = @"right";
+    if (sender == self.userButtonsTopRightButton) {
+      if (![_userButtonsPosition isEqualToString:@"topRight"]) {
+        _userButtonsPosition = @"topRight";
         _changesMade = YES;
       }
-    } else if (sender == self.userButtonsLeftButton) {
-      if (![_userButtonsPosition isEqualToString:@"left"]) {
-        _userButtonsPosition = @"left";
+    } else if (sender == self.userButtonsTopLeftButton) {
+      if (![_userButtonsPosition isEqualToString:@"topLeft"]) {
+        _userButtonsPosition = @"topLeft";
+        _changesMade = YES;
+      }
+    } else if (sender == self.userButtonsBottomRightButton) {
+      if (![_userButtonsPosition isEqualToString:@"bottomRight"]) {
+        _userButtonsPosition = @"bottomRight";
+        _changesMade = YES;
+      }
+    } else if (sender == self.userButtonsBottomLeftButton) {
+      if (![_userButtonsPosition isEqualToString:@"bottomLeft"]) {
+        _userButtonsPosition = @"bottomLeft";
         _changesMade = YES;
       }
     }
@@ -276,8 +263,7 @@
       }
     }
   }
-
-  NSLog(@"new settings: %i, %@, %@, %@, %@, %@", _tonesPerOctave, _instrument, _keyCharacter, _keyboardStyle, _colourStyle, _userButtonsPosition);
+  NSLog(@"new settings: %lu, %@, %@, %@, %@, %@", (unsigned long)_tonesPerOctave, _instrument, _keyCharacter, _keyboardStyle, _colourStyle, _userButtonsPosition);
 }
 
 -(IBAction)doneButtonTapped:(id)sender {
@@ -308,8 +294,6 @@
   UIButton *tempChosenKeyCharacter;
   if ([_keyCharacter isEqualToString:@"numbered"]) {
     tempChosenKeyCharacter = self.numberedKeyButton;
-  } else if ([_keyCharacter isEqualToString:@"accidental"]) {
-    tempChosenKeyCharacter = self.accidentalKeyButton;
   } else if ([_keyCharacter isEqualToString:@"blank"]) {
     tempChosenKeyCharacter = self.blankKeyButton;
   }
@@ -317,8 +301,6 @@
   UIButton *tempChosenKeyboardStyle;
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
     tempChosenKeyboardStyle = self.whiteBlackLayoutButton;
-  } else if ([_keyboardStyle isEqualToString:@"justWhite"]) {
-    tempChosenKeyboardStyle = self.justWhiteLayoutButton;
   } else if ([_keyboardStyle isEqualToString:@"grid"]) {
     tempChosenKeyboardStyle = self.gridLayoutButton;
   }
@@ -333,10 +315,14 @@
   }
   
   UIButton *tempUserButton;
-  if ([_userButtonsPosition isEqualToString:@"right"]) {
-    tempUserButton = self.userButtonsRightButton;
-  } else if ([_userButtonsPosition isEqualToString:@"left"]) {
-    tempUserButton = self.userButtonsLeftButton;
+  if ([_userButtonsPosition isEqualToString:@"topRight"]) {
+    tempUserButton = self.userButtonsTopRightButton;
+  } else if ([_userButtonsPosition isEqualToString:@"topLeft"]) {
+    tempUserButton = self.userButtonsTopLeftButton;
+  } else if ([_userButtonsPosition isEqualToString:@"bottomRight"]) {
+    tempUserButton = self.userButtonsBottomRightButton;
+  } else if ([_userButtonsPosition isEqualToString:@"bottomLeft"]) {
+    tempUserButton = self.userButtonsBottomLeftButton;
   }
   
   for (UIButton *button in _instrumentButtons) {
@@ -380,7 +366,7 @@
 
 -(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
   if (pickerView == self.tonesPerOctavePicker) {
-    return 35;
+    return 72 - 1;
   }
   return 0;
 }
@@ -402,17 +388,8 @@
 -(void)presentPickerState {
   UIButton *tempChosenButton;
   switch (_tonesPerOctave) {
-    case 5:
-      tempChosenButton = self.fiveButton;
-      break;
-    case 7:
-      tempChosenButton = self.sevenButton;
-      break;
     case 12:
       tempChosenButton = self.twelveButton;
-      break;
-    case 15:
-      tempChosenButton = self.fifteenButton;
       break;
     case 17:
       tempChosenButton = self.seventeenButton;
@@ -420,28 +397,31 @@
     case 19:
       tempChosenButton = self.nineteenButton;
       break;
-    case 22:
-      tempChosenButton = self.twentyTwoButton;
-      break;
     case 24:
       tempChosenButton = self.twentyFourButton;
       break;
     case 31:
       tempChosenButton = self.thirtyOneButton;
       break;
+    case 41:
+      tempChosenButton = self.fortyOneButton;
+      break;
     default:
       tempChosenButton = nil;
+        // no custom tonesPerOctave button selected
+      self.whiteBlackLayoutButton.enabled = NO;
       break;
   }
   for (UIButton *button in _tonesPerOctaveButtons) {
     if (button == tempChosenButton) {
       button.selected = YES;
+        // a custom tonesPerOctave button selected
+      self.whiteBlackLayoutButton.enabled = YES;
     } else {
       button.selected = NO;
     }
   }
 }
-
 
 #pragma mark - app methods
 
