@@ -23,10 +23,11 @@
   NSArray *_keyboardStyleButtons;
   NSArray *_colourStyleButtons;
   NSArray *_userButtons;
-  
+
   NSUInteger _tonesPerOctave;
   NSString *_instrument;
   NSString *_keyboardStyle;
+  NSUInteger _gridInterval;
   NSString *_colourStyle;
   NSString *_keyCharacter;
   NSString *_userButtonsPosition;
@@ -51,17 +52,26 @@
   _instrument = self.dataModel.instrument;
   _keyCharacter = self.dataModel.keyCharacter;
   _keyboardStyle = self.dataModel.keyboardStyle;
+  _gridInterval = [self.dataModel.gridInterval integerValue];
   _colourStyle = self.dataModel.colourStyle;
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   
   NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
-  for (int i = 2; i <= 72; i++) {
+  for (int i = 2; i <= 48; i++) {
     [pickerTonesTemp addObject:[NSNumber numberWithInt:i]];
   }
   _pickerTones = [NSArray arrayWithArray:pickerTonesTemp];
   self.tonesPerOctavePicker.delegate = self;
-  [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:NO];
+  [self.tonesPerOctavePicker selectRow:_tonesPerOctave - 2 inComponent:0 animated:NO];
 
+  self.gridIntervalPicker.delegate = self;
+  [self presentGridPickerState];
+  if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    self.gridIntervalPicker.hidden = YES;
+  } else {
+    self.gridIntervalPicker.hidden = NO;
+  }
+  
   _tonesPerOctaveButtons = @[self.twelveButton, self.seventeenButton, self.nineteenButton,
                              self.twentyFourButton, self.thirtyOneButton, self.fortyOneButton];
   _instrumentButtons = @[self.pianoButton, self.violinButton, self.steelpanButton];
@@ -85,7 +95,6 @@
     if (sender == self.twelveButton) {
       if (_tonesPerOctave != 12) {
         _tonesPerOctave = 12;
-        
         _changesMade = YES;
       }
     } else if (sender == self.seventeenButton) {
@@ -115,18 +124,19 @@
       }
     }
     if (_changesMade) {
-      
       for (UIButton *button in _tonesPerOctaveButtons) {
         if (button == sender) {
           button.selected = YES;
             // a custom tonesPerOctave button selected
           self.whiteBlackLayoutButton.enabled = YES;
           [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:YES];
+          [self presentGridPickerState];
         } else {
           button.selected = NO;
         }
       }
     }
+    [self determineFifthWheelButtonEnabled];
   }
   
   if ([_instrumentButtons containsObject:sender]) {
@@ -185,11 +195,13 @@
       if (![_keyboardStyle isEqualToString:@"whiteBlack"]) {
         _keyboardStyle = @"whiteBlack";
         _changesMade = YES;
+        self.gridIntervalPicker.hidden = YES;
       }
     } else if (sender == self.gridLayoutButton) {
       if (![_keyboardStyle isEqualToString:@"grid"]) {
         _keyboardStyle = @"grid";
         _changesMade = YES;
+        self.gridIntervalPicker.hidden = NO;
       }
     }
     if (_changesMade) {
@@ -263,7 +275,7 @@
       }
     }
   }
-  NSLog(@"new settings: %lu, %@, %@, %@, %@, %@", (unsigned long)_tonesPerOctave, _instrument, _keyCharacter, _keyboardStyle, _colourStyle, _userButtonsPosition);
+//  NSLog(@"new settings: %lu, %@, %@, %@, %@, %@", (unsigned long)_tonesPerOctave, _instrument, _keyCharacter, _keyboardStyle, _colourStyle, _userButtonsPosition);
 }
 
 -(IBAction)doneButtonTapped:(id)sender {
@@ -275,13 +287,14 @@
     self.dataModel.keyboardStyle = _keyboardStyle;
     self.dataModel.colourStyle = _colourStyle;
     self.dataModel.userButtonsPosition = _userButtonsPosition;
+    self.dataModel.gridInterval = [NSNumber numberWithInteger:_gridInterval];
     [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
   }
   [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
 }
 
 -(void)presentState {
-  [self presentPickerState];
+  [self presentTonesPickerState];
   UIButton *tempChosenInstrument;
   if ([_instrument isEqualToString:@"piano"]) {
     tempChosenInstrument = self.pianoButton;
@@ -366,7 +379,9 @@
 
 -(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
   if (pickerView == self.tonesPerOctavePicker) {
-    return 72 - 1;
+    return 48 - 1;
+  } else if (pickerView == self.gridIntervalPicker) {
+  return _tonesPerOctave;
   }
   return 0;
 }
@@ -376,16 +391,35 @@
 }
 
 -(NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
-  return [NSString stringWithFormat:@"%@", _pickerTones[row]];
+  if (pickerView == self.tonesPerOctavePicker) {
+    return [NSString stringWithFormat:@"%@", _pickerTones[row]];
+  } else if (pickerView == self.gridIntervalPicker) {
+    return [NSString stringWithFormat:@"%i", row + 1];
+  }
+  return @"";
 }
 
 -(void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-  _changesMade = YES;
-  _tonesPerOctave = row + 2;
-  [self presentPickerState];
+  if (pickerView == self.tonesPerOctavePicker) {
+    _changesMade = YES;
+    _tonesPerOctave = row + 2;
+    [self presentTonesPickerState];
+      // choice of tones per interval also affects grid interval picker
+      [self presentGridPickerState];
+  } else if (pickerView == self.gridIntervalPicker) {
+    _changesMade = YES;
+    _gridInterval = row + 1;
+  }
 }
 
--(void)presentPickerState {
+-(void)presentGridPickerState {
+  NSUInteger perfectFourth = _tonesPerOctave - [self.delegate findPerfectFifthWithTonesPerOctave:_tonesPerOctave];
+  _gridInterval = perfectFourth;
+  [self.gridIntervalPicker reloadAllComponents];
+  [self.gridIntervalPicker selectRow:perfectFourth - 1 inComponent:0 animated:YES];
+}
+
+-(void)presentTonesPickerState {
   UIButton *tempChosenButton;
   switch (_tonesPerOctave) {
     case 12:
@@ -408,10 +442,11 @@
       break;
     default:
       tempChosenButton = nil;
-        // no custom tonesPerOctave button selected
-      self.whiteBlackLayoutButton.enabled = NO;
+        // if not a custom tone, there is no whiteBlack layout
+      [self disableWhiteBlackButtonAndForceGrid];
       break;
   }
+  
   for (UIButton *button in _tonesPerOctaveButtons) {
     if (button == tempChosenButton) {
       button.selected = YES;
@@ -420,6 +455,36 @@
     } else {
       button.selected = NO;
     }
+  }
+  [self determineFifthWheelButtonEnabled];
+}
+
+-(void)disableWhiteBlackButtonAndForceGrid {
+    // no custom tonesPerOctave button selected
+  self.whiteBlackLayoutButton.enabled = NO;
+    // force grid selection if not a custom tone but whiteBlack still selected
+  if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    self.whiteBlackLayoutButton.selected = NO;
+    _keyboardStyle = @"grid";
+    self.gridLayoutButton.selected = YES;
+    self.gridIntervalPicker.hidden = NO;
+  }
+}
+
+-(void)determineFifthWheelButtonEnabled {
+  self.fifthWheelColourButton.enabled = NO;
+    // force stepwise selection ONLY if not relative prime and fifthWheel still selected
+    // 24 is only custom button that is not relative prime
+  if ([@[@4, @6, @10, @14, @15, @20, @21, @24, @25, @28, @30, @34, @35, @36, @38, @44, @48]
+       containsObject:[NSNumber numberWithUnsignedInteger:_tonesPerOctave ]]) {
+    self.fifthWheelColourButton.enabled = NO;
+    if ([_colourStyle isEqualToString:@"fifthWheel"]) {
+      self.fifthWheelColourButton.selected = NO;
+      _colourStyle = @"stepwise";
+      self.stepwiseColourButton.selected = YES;
+    }
+  } else {
+    self.fifthWheelColourButton.enabled = YES;
   }
 }
 
@@ -431,7 +496,7 @@
 }
 
 -(void)dealloc {
-  NSLog(@"deallocated %@", self);
+//  NSLog(@"deallocated %@", self);
 }
 
 @end

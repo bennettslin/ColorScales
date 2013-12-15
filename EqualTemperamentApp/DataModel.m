@@ -18,6 +18,7 @@
   [aCoder encodeObject:self.instrument forKey:@"instrument"];
   [aCoder encodeObject:self.keyCharacter forKey:@"keyCharacter"];
   [aCoder encodeObject:self.keyboardStyle forKey:@"keyboardStyle"];
+  [aCoder encodeObject:self.gridInterval forKey:@"gridInterval"];
   [aCoder encodeObject:self.colourStyle forKey:@"colourStyle"];
   [aCoder encodeObject:self.userButtonsPosition forKey:@"userButtonsPosition"];
 }
@@ -28,6 +29,7 @@
     self.instrument = [aDecoder decodeObjectForKey:@"instrument"];
     self.keyCharacter = [aDecoder decodeObjectForKey:@"keyCharacter"];
     self.keyboardStyle = [aDecoder decodeObjectForKey:@"keyboardStyle"];
+    self.gridInterval = [aDecoder decodeObjectForKey:@"gridInterval"];
     self.colourStyle = [aDecoder decodeObjectForKey:@"colourStyle"];
     self.userButtonsPosition = [aDecoder decodeObjectForKey:@"userButtonsPosition"];
   }

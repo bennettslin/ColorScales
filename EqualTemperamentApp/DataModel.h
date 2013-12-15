@@ -14,6 +14,7 @@
 @property (strong, nonatomic) NSString *instrument;
 @property (strong, nonatomic) NSString *keyCharacter;
 @property (strong, nonatomic) NSString *keyboardStyle;
+@property (strong, nonatomic) NSNumber *gridInterval;
 @property (strong, nonatomic) NSString *colourStyle;
 @property (strong, nonatomic) NSString *userButtonsPosition;
 

@@ -27,21 +27,35 @@
                      andPerfectFifth:perfectFifth
                       andScaleDegree:scaleDegree];
     if ([keyCharacter isEqualToString:@"numbered"]) {
-      [self addLabelGivenKeyCharacter:keyCharacter forScaleDegree:scaleDegree];
+      [self addLabelGivenColourStyle:colourStyle andBlackKeyHeight:(CGFloat)keyHeight forScaleDegree:scaleDegree];
     }
   }
   return self;
 }
 
--(void)addLabelGivenKeyCharacter:(NSString *)keyCharacter forScaleDegree:(NSUInteger)scaleDegree {
+-(void)addLabelGivenColourStyle:(NSString *)colourStyle
+              andBlackKeyHeight:(CGFloat)blackKeyHeight
+                 forScaleDegree:(NSUInteger)scaleDegree {
   CGFloat keyWidth = self.frame.size.width; // also size of each square edge of label
-  CGFloat keyHeight = self.frame.size.height;
+  CGFloat whiteKeyHeight = self.frame.size.height;
   CGFloat labelHeight = 40.f;
-  CGRect labelFrame = CGRectMake(0.f, keyHeight - labelHeight, keyWidth, labelHeight);
+  CGRect labelFrame = CGRectMake(0.f, whiteKeyHeight - labelHeight, keyWidth, labelHeight);
   self.characterLabel = [[UILabel alloc] initWithFrame:labelFrame];
-//  [self.characterLabel setCenter:self.center];
   self.characterLabel.textAlignment = NSTextAlignmentCenter;
-  self.characterLabel.textColor = [UIColor blackColor];
+  
+  if ([colourStyle isEqualToString:@"noColour"]) {
+    if (blackKeyHeight == 1.f) {
+        // this is a white key
+      self.characterLabel.textColor = [UIColor colorWithRed:0.5f green:0.5f blue:0.5f alpha:1.f];
+    } else {
+        // this is a black key
+      self.characterLabel.textColor = [UIColor whiteColor];
+    }
+  } else {
+      // this is any coloured key
+    self.characterLabel.textColor = [UIColor colorWithRed:0.4f green:0.4f blue:0.4f alpha:1.f];
+  }
+  
   self.characterLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)scaleDegree];
 
   [self addSubview:self.characterLabel];

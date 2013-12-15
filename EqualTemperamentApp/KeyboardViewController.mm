@@ -45,6 +45,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 @end
 
 @implementation KeyboardViewController {
+  CGFloat _scrollViewMargin;
+  
   NSUInteger _numberOfOctaves;
   NSUInteger _totalKeysInKeyboard;
   NSUInteger _perfectFifth;
@@ -76,10 +78,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [super viewDidLoad];
   
     // Bennett-tweaked constants
-  _numberOfOctaves = 4;
-  _lowestTone = 110.f;
+  _numberOfOctaves = 3;
+  _lowestTone = 130.8127826f; // C3
   _numberOfGridRows = 3; // for now, but will change based on iPad or iPhone
-  _gridInterval = 5; // for now, will later be based on user Input
   
     // instantiates self.dataModel only on very first launch
   NSString *path = [self dataFilePath];
@@ -91,6 +92,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     self.dataModel.instrument = @"piano";
     self.dataModel.keyCharacter = @"numbered";
     self.dataModel.keyboardStyle = @"whiteBlack";
+    self.dataModel.gridInterval = @7;
     self.dataModel.colourStyle = @"fifthWheel";
     self.dataModel.userButtonsPosition = @"bottomRight";
   }
@@ -116,6 +118,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   _instrument = self.dataModel.instrument;
   _keyCharacter = self.dataModel.keyCharacter;
   _keyboardStyle = self.dataModel.keyboardStyle;
+  _gridInterval = [self.dataModel.gridInterval integerValue];
   _colourStyle = self.dataModel.colourStyle;
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   
@@ -128,7 +131,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)placeScrollView {
   self.scrollView = [[UIScrollView alloc] init];
-  self.scrollView.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
+  self.scrollView.frame = CGRectMake(0, 0,
+                                     self.view.bounds.size.width, self.view.bounds.size.height);
   self.scrollView.backgroundColor = _backgroundColour;
   CGFloat keyWidth = 0;
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
@@ -161,6 +165,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [multipleTapsRecognizer setNumberOfTouchesRequired:2];
   [self.scrollView addGestureRecognizer:multipleTapsRecognizer];
   
+  _scrollViewMargin = [self findScrollViewMargin];
   self.scrollView.delegate = self;
   [self.view addSubview:self.scrollView];
 }
@@ -174,13 +179,23 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
 }
 
+-(CGFloat)findScrollViewMargin {
+  CGFloat scrollViewWidth = self.scrollView.frame.size.width;
+  CGFloat viewWidth = self.view.frame.size.width;
+  NSLog(@"scrollview width is %f, view width is %f", scrollViewWidth, viewWidth);
+  if (viewWidth > scrollViewWidth) {
+    return (viewWidth - scrollViewWidth) / 2;
+  }
+  return 0.f;
+}
+
 -(void)layoutWhiteBlackKeyboardStyle {
       // first add white keys
   NSInteger whiteKeyCount = 0;
   for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
     NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
     if ([self isWhiteKeyGivenScaleDegree:scaleDegree]) {
-      CGRect frame = CGRectMake(marginSide + (whiteKeyCount * whiteBlackWhiteKeyWidth), marginTop, whiteBlackWhiteKeyWidth, whiteKeyHeight);
+      CGRect frame = CGRectMake(_scrollViewMargin + marginSide + (whiteKeyCount * whiteBlackWhiteKeyWidth), marginTop, whiteBlackWhiteKeyWidth, whiteKeyHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                                 andKeyCharacter:_keyCharacter
@@ -202,10 +217,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   for (NSArray *thisBlackKeyRow in _theBlackKeys) {
     NSInteger blackKeyIndexRow = [_theBlackKeys indexOfObject:thisBlackKeyRow];
     CGFloat blackKeyType = [self getBlackKeyTypeGivenIndexRow:blackKeyIndexRow];
-    NSLog(@"black key type is %f for row %i", blackKeyType, blackKeyIndexRow);
     CGFloat blackKeyHeightMultiplier = [self getBlackKeyHeightMultiplierGivenBlackKeyType:blackKeyType];
     CGFloat blackKeyHeight = blackKeyHeightMultiplier * whiteKeyHeight;
-    NSLog(@"black Key height is %f", blackKeyHeight);
     
     if (blackKeyType == 11/18.f + 0.00001f) {
       blackKeyOffsetMultiplier = 1/2.f;
@@ -219,7 +232,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       if ([thisBlackKeyRow containsObject:scaleDegree]) {
-        CGRect frame = CGRectMake((initialExtraMultiplier * whiteBlackWhiteKeyWidth) + marginSide +
+        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * whiteBlackWhiteKeyWidth) + marginSide +
                                   ((whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset +
                                   (blackKeyCount * whiteBlackWhiteKeyWidth) + blackKeyGapSpace, marginTop,
                                   blackKeyWidth, blackKeyHeight);
@@ -249,7 +262,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     for (NSInteger nmsd = thisRow * _gridInterval; nmsd < _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - (thisRow + 1))); nmsd++) {
       
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
-      CGRect frame = CGRectMake(marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
+      CGRect frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
                                  marginTop + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), gridKeyWidth, gridKeyHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
@@ -346,11 +359,11 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)establishValuesFromTonesPerOctave {
   _totalKeysInKeyboard = (_numberOfOctaves * _tonesPerOctave) + 1;
-  _semitoneInterval = pow(2.f, (1.f / _tonesPerOctave));
-  [self findPerfectFifth];
+  _perfectFifth = [self findPerfectFifthWithTonesPerOctave:_tonesPerOctave];
 }
 
--(void)findPerfectFifth {
+-(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave {
+  _semitoneInterval = pow(2.f, (1.f / tonesPerOctave));
   int sd = 1;
   float tempRatio = _semitoneInterval;
     // find scale degree that results in first ratio greater than 1.5
@@ -363,12 +376,10 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   float lowerRatioDiff = 1.5 - (tempRatio / _semitoneInterval);
   float higherRatioDiff = tempRatio - 1.5;
   if (lowerRatioDiff < higherRatioDiff) {
-    _perfectFifth = sd - 1;
+    return sd - 1;
   } else {
-    _perfectFifth = sd;
+    return sd;
   }
-    //  NSLog(@"lowRatio diff %f, highRatio diff %f", lowerRatioDiff, higherRatioDiff);
-    //  NSLog(@"this is the perfect fifth %lu", (unsigned long)_perfectFifth);
 }
 
 #pragma mark - key button logic

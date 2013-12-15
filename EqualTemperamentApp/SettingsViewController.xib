@@ -9,6 +9,7 @@
                 <outlet property="blankKeyButton" destination="1pI-MY-0yE" id="ET7-4E-sLN"/>
                 <outlet property="fifthWheelColourButton" destination="gYc-qQ-O0e" id="2eB-Ao-YBI"/>
                 <outlet property="fortyOneButton" destination="R6y-iQ-15I" id="kth-hR-mvr"/>
+                <outlet property="gridIntervalPicker" destination="zLW-6d-jG9" id="hQA-fK-hB2"/>
                 <outlet property="gridLayoutButton" destination="NOW-zN-BUb" id="jyd-vy-4Wl"/>
                 <outlet property="nineteenButton" destination="bRl-bl-KEK" id="6eR-2c-Xhr"/>
                 <outlet property="noColourButton" destination="DmR-68-gQx" id="oIy-eM-ckY"/>

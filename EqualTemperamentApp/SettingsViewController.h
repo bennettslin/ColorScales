@@ -29,6 +29,8 @@
 @property (weak, nonatomic) IBOutlet UIButton *blankKeyButton;
 @property (weak, nonatomic) IBOutlet UIButton *whiteBlackLayoutButton;
 @property (weak, nonatomic) IBOutlet UIButton *gridLayoutButton;
+@property (weak, nonatomic) IBOutlet UIPickerView *gridIntervalPicker;
+
 @property (weak, nonatomic) IBOutlet UIButton *fifthWheelColourButton;
 @property (weak, nonatomic) IBOutlet UIButton *stepwiseColourButton;
 @property (weak, nonatomic) IBOutlet UIButton *noColourButton;
@@ -48,5 +50,6 @@
 @protocol SettingsDelegate <NSObject>
 
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel;
+-(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave;
 
 @end
