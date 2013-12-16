@@ -16,6 +16,9 @@
   self.keyboardVC = [[KeyboardViewController alloc] initWithNibName:@"KeyboardViewController" bundle:nil];
   self.window.rootViewController = self.keyboardVC;
   [self.window makeKeyAndVisible];
+  
+  [[UIButton appearance] setTintColor:[UIColor colorWithRed:1.f green:.5f blue:.1f alpha:1.f]];
+  
   return YES;
 }
 							

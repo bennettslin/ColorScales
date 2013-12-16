@@ -16,6 +16,7 @@
 @property (strong, nonatomic) NSString *keyboardStyle;
 @property (strong, nonatomic) NSNumber *gridInterval;
 @property (strong, nonatomic) NSString *colourStyle;
+@property (strong, nonatomic) NSNumber *rootColourWheelPosition;
 @property (strong, nonatomic) NSString *userButtonsPosition;
 
 @end

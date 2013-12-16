@@ -8,6 +8,7 @@
 
 #import "SettingsViewController.h"
 #import "DataModel.h"
+#import "UIColor+ColourWheel.h"
 
 @interface SettingsViewController () <UIPickerViewDataSource, UIPickerViewDelegate>
 
@@ -23,6 +24,7 @@
   NSArray *_keyboardStyleButtons;
   NSArray *_colourStyleButtons;
   NSArray *_userButtons;
+  NSUInteger _rootColourWheelPosition;
 
   NSUInteger _tonesPerOctave;
   NSString *_instrument;
@@ -31,9 +33,17 @@
   NSString *_colourStyle;
   NSString *_keyCharacter;
   NSString *_userButtonsPosition;
+  
+  UIColor *_backgroundColour;
+  UIColor *_pickerCoverColour;
+  
+  UIView *_gridPickerCover;
+  UIView *_colourPickerCover;
+  
+  NSUInteger _coloursInPicker;
 }
 
-#pragma mark - view methods
+#pragma mark - init methods
 
 -(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -45,15 +55,19 @@
   // TODO: need to add images individually to buttons
 -(void)viewDidLoad {
   [super viewDidLoad];
-  
+  _coloursInPicker = 24;
+  _backgroundColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:1.f];
+  _pickerCoverColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:0.6f];
+  self.view.backgroundColor = _backgroundColour;
   _changesMade = NO;
   
-  _tonesPerOctave = [self.dataModel.tonesPerOctave integerValue];
+  _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
   _instrument = self.dataModel.instrument;
   _keyCharacter = self.dataModel.keyCharacter;
   _keyboardStyle = self.dataModel.keyboardStyle;
-  _gridInterval = [self.dataModel.gridInterval integerValue];
+  _gridInterval = [self.dataModel.gridInterval unsignedIntegerValue];
   _colourStyle = self.dataModel.colourStyle;
+  _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   
   NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
@@ -65,11 +79,21 @@
   [self.tonesPerOctavePicker selectRow:_tonesPerOctave - 2 inComponent:0 animated:NO];
 
   self.gridIntervalPicker.delegate = self;
-  [self presentGridPickerState];
+  [self.gridIntervalPicker selectRow:_gridInterval - 1 inComponent:0 animated:NO];
+  _gridPickerCover = [self createAndAddCoverToPicker:self.gridIntervalPicker];
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
-    self.gridIntervalPicker.hidden = YES;
+    [self coverPicker:self.gridIntervalPicker];
   } else {
-    self.gridIntervalPicker.hidden = NO;
+    [self uncoverPicker:self.gridIntervalPicker];
+  }
+
+  self.colourPicker.delegate = self;
+  [self.colourPicker selectRow:_rootColourWheelPosition + (_coloursInPicker * 2000) inComponent:0 animated:NO];
+  _colourPickerCover = [self createAndAddCoverToPicker:self.colourPicker];
+  if ([_colourStyle isEqualToString:@"noColour"]) {
+    [self coverPicker:self.colourPicker];
+  } else {
+    [self uncoverPicker:self.colourPicker];
   }
   
   _tonesPerOctaveButtons = @[self.twelveButton, self.seventeenButton, self.nineteenButton,
@@ -88,6 +112,8 @@
   }
   [self presentState];
 }
+
+#pragma mark - button methods
 
 -(void)musicButtonTapped:(UIButton *)sender {
 
@@ -195,13 +221,13 @@
       if (![_keyboardStyle isEqualToString:@"whiteBlack"]) {
         _keyboardStyle = @"whiteBlack";
         _changesMade = YES;
-        self.gridIntervalPicker.hidden = YES;
+        [self coverPicker:self.gridIntervalPicker];
       }
     } else if (sender == self.gridLayoutButton) {
       if (![_keyboardStyle isEqualToString:@"grid"]) {
         _keyboardStyle = @"grid";
         _changesMade = YES;
-        self.gridIntervalPicker.hidden = NO;
+        [self uncoverPicker:self.gridIntervalPicker];
       }
     }
     if (_changesMade) {
@@ -220,16 +246,19 @@
       if (![_colourStyle isEqualToString:@"fifthWheel"]) {
         _colourStyle = @"fifthWheel";
         _changesMade = YES;
+        [self uncoverPicker:self.colourPicker];
       }
     } else if (sender == self.stepwiseColourButton) {
       if (![_colourStyle isEqualToString:@"stepwise"]) {
         _colourStyle = @"stepwise";
         _changesMade = YES;
+        [self uncoverPicker:self.colourPicker];
       }
     } else if (sender == self.noColourButton) {
       if (![_colourStyle isEqualToString:@"noColour"]) {
         _colourStyle = @"noColour";
         _changesMade = YES;
+        [self coverPicker:self.colourPicker];
       }
     }
     if (_changesMade) {
@@ -281,17 +310,20 @@
 -(IBAction)doneButtonTapped:(id)sender {
   if (_changesMade) {
 //    NSLog(@"Changes made");
-    self.dataModel.tonesPerOctave = [NSNumber numberWithInteger:_tonesPerOctave ];
+    self.dataModel.tonesPerOctave = [NSNumber numberWithUnsignedInteger:_tonesPerOctave ];
     self.dataModel.instrument = _instrument;
     self.dataModel.keyCharacter = _keyCharacter;
     self.dataModel.keyboardStyle = _keyboardStyle;
     self.dataModel.colourStyle = _colourStyle;
+    self.dataModel.rootColourWheelPosition = [NSNumber numberWithUnsignedInteger:_rootColourWheelPosition];
     self.dataModel.userButtonsPosition = _userButtonsPosition;
-    self.dataModel.gridInterval = [NSNumber numberWithInteger:_gridInterval];
+    self.dataModel.gridInterval = [NSNumber numberWithUnsignedInteger:_gridInterval];
     [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
   }
   [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
 }
+
+#pragma mark - change view state methods
 
 -(void)presentState {
   [self presentTonesPickerState];
@@ -375,43 +407,6 @@
   }
 }
 
-#pragma mark - picker view methods
-
--(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-  if (pickerView == self.tonesPerOctavePicker) {
-    return 48 - 1;
-  } else if (pickerView == self.gridIntervalPicker) {
-  return _tonesPerOctave;
-  }
-  return 0;
-}
-
--(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-  return 1;
-}
-
--(NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
-  if (pickerView == self.tonesPerOctavePicker) {
-    return [NSString stringWithFormat:@"%@", _pickerTones[row]];
-  } else if (pickerView == self.gridIntervalPicker) {
-    return [NSString stringWithFormat:@"%i", row + 1];
-  }
-  return @"";
-}
-
--(void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-  if (pickerView == self.tonesPerOctavePicker) {
-    _changesMade = YES;
-    _tonesPerOctave = row + 2;
-    [self presentTonesPickerState];
-      // choice of tones per interval also affects grid interval picker
-      [self presentGridPickerState];
-  } else if (pickerView == self.gridIntervalPicker) {
-    _changesMade = YES;
-    _gridInterval = row + 1;
-  }
-}
-
 -(void)presentGridPickerState {
   NSUInteger perfectFourth = _tonesPerOctave - [self.delegate findPerfectFifthWithTonesPerOctave:_tonesPerOctave];
   _gridInterval = perfectFourth;
@@ -467,7 +462,7 @@
     self.whiteBlackLayoutButton.selected = NO;
     _keyboardStyle = @"grid";
     self.gridLayoutButton.selected = YES;
-    self.gridIntervalPicker.hidden = NO;
+    [self uncoverPicker:self.gridIntervalPicker];
   }
 }
 
@@ -485,6 +480,121 @@
     }
   } else {
     self.fifthWheelColourButton.enabled = YES;
+  }
+}
+
+-(UIView *)createAndAddCoverToPicker:(UIPickerView *)picker {
+  UIView *cover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, picker.frame.size.width, picker.frame.size.height)];
+  cover.backgroundColor = _pickerCoverColour;
+  [picker addSubview:cover];
+  return cover;
+}
+
+-(void)coverPicker:(UIPickerView *)picker {
+  picker.userInteractionEnabled = NO;
+  if (picker == self.gridIntervalPicker) {
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+      _gridPickerCover.hidden = NO;
+      _gridPickerCover.alpha = 1.f;
+    } completion:^(BOOL finished) {
+      [picker reloadAllComponents];
+    }];
+  } else if (picker == self.colourPicker) {
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+      _colourPickerCover.hidden = NO;
+      _colourPickerCover.alpha = 1.f;
+    } completion:^(BOOL finished) {
+      [picker reloadAllComponents];
+    }];
+  }
+}
+
+-(void)uncoverPicker:(UIPickerView *)picker {
+  picker.userInteractionEnabled = YES;
+  if (picker == self.gridIntervalPicker) {
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+      _gridPickerCover.alpha = 0.1f;
+    } completion:^(BOOL finished) {
+      _gridPickerCover.hidden = YES;
+      [picker reloadAllComponents];
+    }];
+  } else if (picker == self.colourPicker) {
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+      _colourPickerCover.alpha = 0.1f;
+    } completion:^(BOOL finished) {
+      _colourPickerCover.hidden = YES;
+      [picker reloadAllComponents];
+    }];
+  }
+}
+
+#pragma mark - picker view methods
+
+-(CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component {
+  return 24.f;
+}
+
+-(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+  if (pickerView == self.tonesPerOctavePicker) {
+    return 48 - 1;
+  } else if (pickerView == self.gridIntervalPicker) {
+  return _tonesPerOctave;
+  } else if (pickerView == self.colourPicker) {
+    return 100000;
+  }
+  return 0;
+}
+
+-(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+  return 1;
+}
+
+-(UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
+  if (pickerView == self.colourPicker) {
+    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 24)];
+    if (_colourPickerCover.isHidden) {
+      thisView.backgroundColor = [UIColor findNormalKeyColour:((row % _coloursInPicker) / (CGFloat)_coloursInPicker) withMinBright:0.45f];
+    } else {
+      thisView.backgroundColor = [UIColor findNormalKeyColour:((row % _coloursInPicker) / (CGFloat)_coloursInPicker) withMinBright:0.7f];
+    }
+    thisView.layer.borderColor = [UIColor colorWithRed:0.3f green:0.3f blue:0.25f alpha:1.f].CGColor;
+    thisView.layer.borderWidth = 1.f;
+    return thisView;
+
+  } else {
+    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 24)];
+    UILabel *label = [[UILabel alloc] initWithFrame:thisView.frame];
+    label.center = thisView.center;
+    label.textAlignment = NSTextAlignmentCenter;
+    [thisView addSubview:label];
+    if (pickerView == self.tonesPerOctavePicker) {
+      label.text = [NSString stringWithFormat:@"%@", _pickerTones[row]];
+    } else if (pickerView == self.gridIntervalPicker) {
+      label.text = [NSString stringWithFormat:@"%i", row + 1];
+    }
+    if (pickerView == self.gridIntervalPicker && !_gridPickerCover.isHidden) {
+      label.textColor = [UIColor colorWithRed:0.4f green:0.4f blue:0.4f alpha:0.9f];
+    } else {
+      label.textColor = [UIColor blackColor];
+    }
+    return thisView;
+
+  }
+}
+
+-(void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+  if (pickerView == self.tonesPerOctavePicker) {
+    _changesMade = YES;
+    _tonesPerOctave = row + 2;
+    [self presentTonesPickerState];
+      // choice of tones per interval also affects grid interval picker
+      [self presentGridPickerState];
+  } else if (pickerView == self.gridIntervalPicker) {
+    _changesMade = YES;
+    _gridInterval = row + 1;
+  } else if (pickerView == self.colourPicker) {
+    _changesMade = YES;
+    _rootColourWheelPosition = row % _coloursInPicker;
   }
 }
 

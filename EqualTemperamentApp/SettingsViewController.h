@@ -34,6 +34,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *fifthWheelColourButton;
 @property (weak, nonatomic) IBOutlet UIButton *stepwiseColourButton;
 @property (weak, nonatomic) IBOutlet UIButton *noColourButton;
+@property (weak, nonatomic) IBOutlet UIPickerView *colourPicker;
 
 @property (weak, nonatomic) IBOutlet UIButton *userButtonsTopRightButton;
 @property (weak, nonatomic) IBOutlet UIButton *userButtonsTopLeftButton;

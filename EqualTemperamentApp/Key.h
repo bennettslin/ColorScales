@@ -13,14 +13,13 @@
 @property (strong, nonatomic) UIColor *normalColour;
 @property (strong, nonatomic) UIColor *highlightedColour;
 @property (strong, nonatomic) UILabel *characterLabel;
-@property (strong, nonatomic) UIColor *borderColour;
 
--(id)initWithFrame:(CGRect)frame
-  givenColourStyle:(NSString *)colourStyle
-   andKeyCharacter:(NSString *)keyCharacter
-      andKeyHeight:(CGFloat)keyHeight
- andTonesPerOctave:(NSUInteger)tonesPerOctave
-   andPerfectFifth:(NSUInteger)perfectFifth
-    andScaleDegree:(NSNumber *)scaleDegreeObject;
+-(id)initWithFrame:(CGRect)frame givenColourStyle:(NSString *)colourStyle
+                       andRootColourWheelPosition:(NSNumber *)rootColourWheelPosition
+                                  andKeyCharacter:(NSString *)keyCharacter
+                                     andKeyHeight:(CGFloat)keyHeight
+                                andTonesPerOctave:(NSUInteger)tonesPerOctave
+                                  andPerfectFifth:(NSUInteger)perfectFifth
+                                   andScaleDegree:(NSNumber *)scaleDegreeObject;
 
 @end
