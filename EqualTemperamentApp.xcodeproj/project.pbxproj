@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F15D95C18602609002377B5 /* KeyboardLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F15D95B18602609002377B5 /* KeyboardLogic.m */; };
 		3F5A589318599EFB00E62735 /* DataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5A589218599EFB00E62735 /* DataModel.m */; };
+		3F67660B18611A32005132E5 /* CustomScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F67660A18611A32005132E5 /* CustomScrollView.m */; };
 		3F7551B5185DAD8F0059350E /* UIColor+ColourWheel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */; };
 		3F7E3627185ABB4E00335286 /* Key.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F7E3626185ABB4E00335286 /* Key.m */; };
 		3F94139018556EA40067CFBF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F94138F18556EA40067CFBF /* Foundation.framework */; };
@@ -178,8 +180,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3F15D95A18602609002377B5 /* KeyboardLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyboardLogic.h; sourceTree = "<group>"; };
+		3F15D95B18602609002377B5 /* KeyboardLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyboardLogic.m; sourceTree = "<group>"; };
 		3F5A589118599EFB00E62735 /* DataModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataModel.h; sourceTree = "<group>"; };
 		3F5A589218599EFB00E62735 /* DataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataModel.m; sourceTree = "<group>"; };
+		3F67660918611A32005132E5 /* CustomScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomScrollView.h; sourceTree = "<group>"; };
+		3F67660A18611A32005132E5 /* CustomScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomScrollView.m; sourceTree = "<group>"; };
 		3F7551B3185DAD8E0059350E /* UIColor+ColourWheel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+ColourWheel.h"; sourceTree = "<group>"; };
 		3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+ColourWheel.m"; sourceTree = "<group>"; };
 		3F7E3625185ABB4E00335286 /* Key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Key.h; sourceTree = "<group>"; };
@@ -520,8 +526,12 @@
 				3FAA7219185846290041268E /* HelpViewController.h */,
 				3FAA721A185846290041268E /* HelpViewController.m */,
 				3FAA721B185846290041268E /* HelpViewController.xib */,
+				3F67660918611A32005132E5 /* CustomScrollView.h */,
+				3F67660A18611A32005132E5 /* CustomScrollView.m */,
 				3F7E3625185ABB4E00335286 /* Key.h */,
 				3F7E3626185ABB4E00335286 /* Key.m */,
+				3F15D95A18602609002377B5 /* KeyboardLogic.h */,
+				3F15D95B18602609002377B5 /* KeyboardLogic.m */,
 				3F7551B3185DAD8E0059350E /* UIColor+ColourWheel.h */,
 				3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */,
 				3F5A589118599EFB00E62735 /* DataModel.h */,
@@ -1036,9 +1046,11 @@
 				3FAA71EC185841EC0041268E /* OneZero.cpp in Sources */,
 				3FAA71CA185841EC0041268E /* DelayA.cpp in Sources */,
 				3FAA71BC185841EC0041268E /* Asymp.cpp in Sources */,
+				3F15D95C18602609002377B5 /* KeyboardLogic.m in Sources */,
 				3FAA71DD185841EC0041268E /* InetWvOut.cpp in Sources */,
 				3FAA7201185841EC0041268E /* Stk.mm in Sources */,
 				3FAA71E0185841EC0041268E /* Mandolin.cpp in Sources */,
+				3F67660B18611A32005132E5 /* CustomScrollView.m in Sources */,
 				3FAA71CF185841EC0041268E /* FileLoop.cpp in Sources */,
 				3FAA7221185848880041268E /* SettingsViewController.m in Sources */,
 				3FAA7209185841EC0041268E /* TwoZero.cpp in Sources */,

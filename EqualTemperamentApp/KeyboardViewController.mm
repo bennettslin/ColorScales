@@ -11,6 +11,8 @@
 #import "mo_audio.h"
 #import "DataModel.h"
 #import "Key.h"
+#import "KeyboardLogic.h"
+#import "CustomScrollView.h"
 
 #define SRATE 44100
 #define FRAMESIZE 128
@@ -35,10 +37,10 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
 }
 
-@interface KeyboardViewController () <UIScrollViewDelegate> {
+@interface KeyboardViewController () <UIScrollViewDelegate, KeyDelegate, CustomScrollViewDelegate> {
   struct AudioData audioData;
 }
-@property (strong, nonatomic) UIScrollView *scrollView;
+@property (strong, nonatomic) CustomScrollView *scrollView;
 @property (strong, nonatomic) DataModel *dataModel;
 
 @end
@@ -61,15 +63,219 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   
   NSUInteger _gridInterval;
   NSUInteger _numberOfGridRows; // set this in viewDidLoad, as it's dependent on iPad or iPhone
-  
   CGFloat _totalKeysPerGridRow;
   
-  float _semitoneInterval;
   float _lowestTone;
   UIColor *_backgroundColour;
   
-  NSArray *_theBlackKeys; // can't think of better way than to make this an instance variable
-  NSArray *_initialExtraMultipliers; // same here
+  NSMutableDictionary *_knownTouchEventAndKeyBeingSounded;
+}
+
+#pragma mark - touch methods
+
+-(void)updateKeyUnderTouchAfterScroll {
+    // checks to see if
+  if (_knownTouchEventAndKeyBeingSounded) {
+    CGPoint touchLocation = [_knownTouchEventAndKeyBeingSounded[@"touch"] locationInView:self.scrollView];
+    UIView *currentViewBeingTouched =
+      [self.scrollView hitTest:touchLocation withEvent:_knownTouchEventAndKeyBeingSounded[@"event"]];
+    if ([currentViewBeingTouched isKindOfClass:[Key class]]) {
+      if (_knownTouchEventAndKeyBeingSounded[@"key"] != currentViewBeingTouched) {
+        Key *currentKeyBeingTouched = (Key *)currentViewBeingTouched;
+        [self keyLifted:_knownTouchEventAndKeyBeingSounded[@"key"]];
+        [self keyPressed:currentKeyBeingTouched];
+        _knownTouchEventAndKeyBeingSounded[@"key"] = currentViewBeingTouched;
+        NSLog(@"After scroll, key under touch is now %i", currentKeyBeingTouched.noModScaleDegree);
+      }
+    }
+  }
+}
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView {
+//  NSLog(@"scrollview did scroll");
+  
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
+  
+//  NSLog(@"touch began for key %i", key.noModScaleDegree);
+  
+  NSLog(@"count of touches %i in touches began: %@", [touches count], touches);
+  NSLog(@"count of event all touches %i in touches began: %@", [[event allTouches] count], [event allTouches]);
+
+  UITouch *touch = [touches anyObject];
+  CGPoint touchLocation = [touch locationInView:self.scrollView];
+  
+  UIView *currentViewBeingTouched = [self.scrollView hitTest:touchLocation withEvent:event];
+  Key *currentKeyBeingTouched;
+  BOOL currentViewIsAKey = [currentViewBeingTouched isKindOfClass:[Key class]];
+  if (!currentViewIsAKey) {
+      // not instantiating a real key here, just signifies that there is no key under this touch
+    currentKeyBeingTouched = [[Key alloc] init];
+    currentKeyBeingTouched.noModScaleDegree = 1000;
+  } else {
+    currentKeyBeingTouched = (Key *)currentViewBeingTouched;
+  }
+  NSLog(@"current key being touched is key %i", currentKeyBeingTouched.noModScaleDegree);
+  
+  if (!_knownTouchEventAndKeyBeingSounded) {
+      // no recorded touch, event and key
+    if (currentKeyBeingTouched.noModScaleDegree != 1000) {
+      _knownTouchEventAndKeyBeingSounded = [[NSMutableDictionary alloc] initWithObjectsAndKeys:touch, @"touch", currentKeyBeingTouched, @"key", event, @"event", nil];
+      [self touch:touch movedIntoKey:currentKeyBeingTouched];
+    }
+    
+  } else if (_knownTouchEventAndKeyBeingSounded[@"key"] == currentKeyBeingTouched) {
+      // do nothing, since it's repressing the same key
+  } else {
+      // gets rid of old touch
+    
+    [self touch:_knownTouchEventAndKeyBeingSounded[@"touch"] movedOutOfKey:_knownTouchEventAndKeyBeingSounded[@"key"]];
+    
+      // makes new touch
+    _knownTouchEventAndKeyBeingSounded[@"touch"] = touch;
+    _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
+    _knownTouchEventAndKeyBeingSounded[@"event"] = event;
+    
+    [self touch:touch movedIntoKey:currentKeyBeingTouched];
+  }
+}
+
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
+  
+  NSLog(@"count of touches %i in touches moved: %@", [touches count], touches);
+  NSLog(@"count of event all touches %i in touches moved: %@", [[event allTouches] count], [event allTouches]);
+  UITouch *touch = [touches anyObject];
+  CGPoint touchLocation = [touch locationInView:self.scrollView];
+  
+  if (!_knownTouchEventAndKeyBeingSounded) {
+      // no recorded touch, event and key
+    _knownTouchEventAndKeyBeingSounded = [[NSMutableDictionary alloc] initWithObjectsAndKeys:touch, @"touch", key, @"key", event, @"event", nil];
+    [self touch:touch movedIntoKey:key];
+  }
+  
+    // retrieve state for this touch recorded in the array
+  Key *knownKeyForThisTouch;
+  if (touch == _knownTouchEventAndKeyBeingSounded[@"touch"]) {
+    knownKeyForThisTouch = _knownTouchEventAndKeyBeingSounded[@"key"];
+  }
+
+    // check to see if state has changed from before
+  UIView *currentViewBeingTouched = [self.scrollView hitTest:touchLocation withEvent:event];
+  Key *currentKeyBeingTouched;
+  BOOL currentViewIsAKey = [currentViewBeingTouched isKindOfClass:[Key class]];
+  if (!currentViewIsAKey) {
+      // not instantiating a real key here, just signifies that there is no key under this touch
+    currentKeyBeingTouched = [[Key alloc] init];
+    currentKeyBeingTouched.noModScaleDegree = 1000;
+  } else {
+    currentKeyBeingTouched = (Key *)currentViewBeingTouched;
+  }
+  
+  if (_knownTouchEventAndKeyBeingSounded) {
+    if (currentKeyBeingTouched.noModScaleDegree == knownKeyForThisTouch.noModScaleDegree) {
+        // nothing has changed
+    } else if (knownKeyForThisTouch.noModScaleDegree != 1000 && !currentViewIsAKey) {
+      NSLog(@"has moved from key %i to nonkey", knownKeyForThisTouch.noModScaleDegree);
+        // touch moved from key to non-key
+      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
+      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
+
+    } else if (knownKeyForThisTouch.noModScaleDegree == 1000 && currentViewIsAKey) {
+      NSLog(@"has moved from nonkey to key %i", knownKeyForThisTouch.noModScaleDegree);
+        // touch moved from non-key to key
+      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
+      [self touch:touch movedIntoKey:currentKeyBeingTouched];
+      
+    } else if (knownKeyForThisTouch.noModScaleDegree != 1000 && currentViewIsAKey) {
+      NSLog(@"has moved from key %i to key %i", knownKeyForThisTouch.noModScaleDegree, currentKeyBeingTouched.noModScaleDegree);
+        // touch moved from key to key
+      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
+      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
+      [self touch:touch movedIntoKey:currentKeyBeingTouched];
+    }
+  }
+}
+
+-(void)touch:(UITouch *)touch movedOutOfKey:(Key *)key {
+//  if ([self thereIsAnotherTouchForThisKey:key underThisTouch:touch]) {
+      // no need to lift the key
+//  } else {
+
+  [self keyLifted:key];
+  
+  touch = nil;
+//  }
+//  NSLog(@"touch %@ moved out of key %i", touch.debugDescription, key.tag - 1000);
+}
+
+-(void)touch:(UITouch *)touch movedIntoKey:(Key *)key {
+//  if ([self thereIsAnotherTouchForThisKey:key underThisTouch:touch]) {
+      // no need to re-press the key
+//  } else {
+  [self keyPressed:key];
+  
+  touch = nil;
+//  }
+//  NSLog(@"touch %@ moved into key %i", touch.debugDescription, key.tag - 1000);
+}
+
+-(BOOL)thereIsAnotherTouchForThisKey:(Key *)key underThisTouch:(UITouch *)touch {
+//  for (NSDictionary *thisTouchAndKey in _currentViewsBeingTouchedAndKeysBeingSounded) {
+      // establish whether there is another touch for this key
+//    if (touch != _knownTouchEventAndKeyBeingSounded[@"touch"] && key == _knownTouchEventAndKeyBeingSounded[@"key"]) {
+//      return YES;
+//    }
+//  }
+  return NO;
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
+  
+  UITouch *touch = [[event allTouches] anyObject];
+
+// retrieve state for this touch recorded in the array
+//  NSUInteger indexOfThisTouch;
+  Key *knownKeyForThisTouch;
+
+    if (touch == _knownTouchEventAndKeyBeingSounded[@"touch"]) {
+//      indexOfThisTouch = [_currentViewsBeingTouchedAndKeysBeingSounded indexOfObject:thisTouchAndKey];
+      knownKeyForThisTouch = _knownTouchEventAndKeyBeingSounded[@"key"];
+      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
+//      [_currentViewsBeingTouchedAndKeysBeingSounded removeObjectAtIndex:indexOfThisTouch];
+      _knownTouchEventAndKeyBeingSounded = nil;
+    }
+
+  
+  NSLog(@"Touches ended for key %i", knownKeyForThisTouch.noModScaleDegree);
+}
+
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
+  [self touchesEnded:touches withEvent:event];
+}
+
+#pragma mark - key sounding methods
+
+-(void)keyPressed:(Key *)sender {
+  if (sender.noModScaleDegree != 1000) {
+    float frequency = _lowestTone * pow(2.f, ((float)sender.noModScaleDegree) / _tonesPerOctave);
+      //  NSLog(@"frequency %f", frequency);
+    audioData.myMandolin->setFrequency(frequency);
+    audioData.myMandolin->pluck(0.7f);
+    
+    NSLog(@"Sounding key %i", sender.noModScaleDegree);
+    
+    sender.backgroundColor = sender.highlightedColour;
+  }
+}
+
+-(void)keyLifted:(Key *)sender {
+  
+  NSLog(@"Lifting key %i", sender.noModScaleDegree);
+  [UIView animateWithDuration:0.25f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
+    sender.backgroundColor = sender.normalColour;
+  } completion:nil];
 }
 
 #pragma mark - view methods
@@ -112,8 +318,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 //  NSLog(@"Data file path is %@", [self dataFilePath]);
 }
 
-#pragma mark - custom view methods
-
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel {
   if (self.scrollView) {
     [self.scrollView removeFromSuperview];
@@ -130,12 +334,14 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [self saveSettings];
   [self establishValuesFromTonesPerOctave];
   [self placeScrollView];
+  
   [self layoutKeysBasedOnKeyboardStyle];
   [self layoutUserButtons];
+  
 }
 
 -(void)placeScrollView {
-  self.scrollView = [[UIScrollView alloc] init];
+  self.scrollView = [[CustomScrollView alloc] init];
   self.scrollView.frame = CGRectMake(0, 0,
                                      self.view.bounds.size.width, self.view.bounds.size.height);
   self.scrollView.backgroundColor = _backgroundColour;
@@ -160,17 +366,15 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     _totalKeysPerGridRow = _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - 1));
     numberOfKeysMultiplier = _totalKeysPerGridRow;
   }
+  
   self.scrollView.contentSize = CGSizeMake((marginSide * 2) + (keyWidth * numberOfKeysMultiplier),
                                            self.scrollView.bounds.size.height);
-  
-  [self.scrollView setMultipleTouchEnabled:YES];
-  UITapGestureRecognizer *multipleTapsRecognizer =
-  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(keysPressed:)];
-  [multipleTapsRecognizer setNumberOfTouchesRequired:2];
-  [self.scrollView addGestureRecognizer:multipleTapsRecognizer];
-  
   _scrollViewMargin = [self findScrollViewMargin];
   self.scrollView.delegate = self;
+  self.scrollView.customDelegate = self;
+  self.scrollView.delaysContentTouches = NO;
+  self.scrollView.multipleTouchEnabled = YES;
+//  self.scrollView.canCancelContentTouches = YES;
   [self.view addSubview:self.scrollView];
 }
 
@@ -198,9 +402,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   NSInteger whiteKeyCount = 0;
   for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
     NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
-    if ([self isWhiteKeyGivenScaleDegree:scaleDegree]) {
+    if ([KeyboardLogic isWhiteKeyGivenScaleDegree:scaleDegree andTonesPerOctave:_tonesPerOctave]) {
       CGRect frame = CGRectMake(_scrollViewMargin + marginSide + (whiteKeyCount * whiteBlackWhiteKeyWidth),
-                                _statusBarHeight, whiteBlackWhiteKeyWidth, whiteKeyHeight);
+                                0, whiteBlackWhiteKeyWidth, whiteKeyHeight + _statusBarHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -214,16 +418,16 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     }
   }
   
-  _theBlackKeys = [self figureOutBlackKeys];
-  _initialExtraMultipliers = [self figureOutInitialExtraMultipliers];
+  NSArray *theBlackKeys = [KeyboardLogic figureOutBlackKeysGivenTonesPerOctave:_tonesPerOctave];
+  NSArray *initialExtraMultipliers = [KeyboardLogic figureOutInitialExtraMultipliersGivenTonesPerOctave:_tonesPerOctave];
   
     // now add however many rows of black keys
   CGFloat blackKeyWidth = whiteBlackWhiteKeyWidth * 3/4;
   CGFloat blackKeyOffsetMultiplier;
-  for (NSArray *thisBlackKeyRow in _theBlackKeys) {
-    NSInteger blackKeyIndexRow = [_theBlackKeys indexOfObject:thisBlackKeyRow];
-    CGFloat blackKeyType = [self getBlackKeyTypeGivenIndexRow:blackKeyIndexRow];
-    CGFloat blackKeyHeightMultiplier = [self getBlackKeyHeightMultiplierGivenBlackKeyType:blackKeyType];
+  for (NSArray *thisBlackKeyRow in theBlackKeys) {
+    NSInteger blackKeyIndexRow = [theBlackKeys indexOfObject:thisBlackKeyRow];
+    CGFloat blackKeyType = [KeyboardLogic getBlackKeyTypeGivenIndexRow:blackKeyIndexRow andTonesPerOctave:_tonesPerOctave];
+    CGFloat blackKeyHeightMultiplier = [KeyboardLogic getBlackKeyHeightMultiplierGivenBlackKeyType:blackKeyType];
     CGFloat blackKeyHeight = blackKeyHeightMultiplier * whiteKeyHeight;
     
     if (blackKeyType == 11/18.f + 0.00001f) {
@@ -232,16 +436,13 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
       blackKeyOffsetMultiplier = blackKeyType;
     }
     CGFloat blackKeyOffset = blackKeyOffsetMultiplier * whiteBlackWhiteKeyWidth + 1.f;
-    CGFloat initialExtraMultiplier = [_initialExtraMultipliers[blackKeyIndexRow] floatValue];
+    CGFloat initialExtraMultiplier = [initialExtraMultipliers[blackKeyIndexRow] floatValue];
     NSInteger blackKeyCount = 0;
     CGFloat blackKeyGapSpace = 0;
     for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       if ([thisBlackKeyRow containsObject:scaleDegree]) {
-        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * whiteBlackWhiteKeyWidth) + marginSide +
-                                  ((whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset +
-                                  (blackKeyCount * whiteBlackWhiteKeyWidth) + blackKeyGapSpace, _statusBarHeight,
-                                  blackKeyWidth, blackKeyHeight);
+        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * whiteBlackWhiteKeyWidth) + marginSide + ((whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset + (blackKeyCount * whiteBlackWhiteKeyWidth) + blackKeyGapSpace, 0, blackKeyWidth, blackKeyHeight + _statusBarHeight);
         Key *thisKey = [[Key alloc] initWithFrame:frame
                                  givenColourStyle:_colourStyle
                        andRootColourWheelPosition:_rootColourWheelPosition
@@ -253,7 +454,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
         [self finalizeThisKey:thisKey withThisNoModScaleDegree:nmsd];
         blackKeyCount++;
           // calculates the added gap space for the next black key
-        CGFloat multiplier = [self getGapSizeGivenScaleDegree:scaleDegree];
+        CGFloat multiplier = [KeyboardLogic getGapSizeGivenScaleDegree:scaleDegree andTonesPerOctave:_tonesPerOctave];
         if (multiplier != 0.f) {
           blackKeyGapSpace += multiplier * whiteBlackWhiteKeyWidth;
         }
@@ -263,14 +464,20 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)layoutGridKeyboardStyle {
-
+    // may need to tweak this to get right
   CGFloat gridKeyHeight = whiteKeyHeight / _numberOfGridRows;
   for (int thisRow = 0; thisRow < _numberOfGridRows; thisRow++) {
     for (NSInteger nmsd = thisRow * _gridInterval; nmsd < _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - (thisRow + 1))); nmsd++) {
       
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
-      CGRect frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
-                                 _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), gridKeyWidth, gridKeyHeight);
+      CGRect frame;
+//      if (thisRow == _numberOfGridRows - 1) { // the last row
+//      frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
+//                                 0, gridKeyWidth, gridKeyHeight + _statusBarHeight);
+//      } else {
+        frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
+                                  _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), gridKeyWidth, gridKeyHeight);
+//      }
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -284,11 +491,14 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
 }
 
--(void)finalizeThisKey:(Key *)thisKey withThisNoModScaleDegree:(NSInteger)nmsd {
+-(void)finalizeThisKey:(Key *)thisKey withThisNoModScaleDegree:(NSUInteger)nmsd {
   thisKey.backgroundColor = thisKey.normalColour;
-  thisKey.tag = 1000 + nmsd;
+  thisKey.noModScaleDegree = nmsd;
   [thisKey addTarget:self action:@selector(keyPressed:) forControlEvents:UIControlEventTouchDown];
   [thisKey addTarget:self action:@selector(keyLifted:) forControlEvents:UIControlEventTouchUpInside];
+  
+  thisKey.delegate = self;
+  
   [self.scrollView addSubview:thisKey];
 }
 
@@ -373,229 +583,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave {
-  _semitoneInterval = pow(2.f, (1.f / tonesPerOctave));
-  NSUInteger sd = 1;
-  float tempRatio = _semitoneInterval;
-    // find scale degree that results in first ratio greater than 1.5
-  while (tempRatio < 1.5f) {
-    tempRatio *= _semitoneInterval;
-      //    NSLog(@"%f", tempRatio);
-    sd += 1;
-  }
-    // compare the two ratio to see which is closer to 1.5
-  float lowerRatioDiff = 1.5 - (tempRatio / _semitoneInterval);
-  float higherRatioDiff = tempRatio - 1.5;
-  if (lowerRatioDiff < higherRatioDiff) {
-    return sd - 1;
-  } else {
-    return sd;
-  }
-}
-
-#pragma mark - key button logic
-
--(BOOL)isWhiteKeyGivenScaleDegree:(NSNumber *)scaleDegree {
-  NSArray *theWhiteKeys;
-  switch (_tonesPerOctave) {
-    case 12:
-      theWhiteKeys = @[@0, @2, @4, @5, @7, @9, @11];
-      break;
-    case 17:
-      theWhiteKeys = @[@0, @3, @6, @7, @10, @13, @16];
-      break;
-    case 19:
-      theWhiteKeys = @[@0, @3, @6, @8, @11, @14, @17];
-      break;
-    case 24:
-      theWhiteKeys = @[@0, @4, @8, @10, @14, @18, @22];
-      break;
-    case 31:
-      theWhiteKeys = @[@0, @5, @10, @13, @18, @23, @28];
-      break;
-    case 41:
-      theWhiteKeys = @[@0, @7, @14, @17, @24, @31, @38];
-      break;
-  }
-  if ([theWhiteKeys containsObject:scaleDegree]) {
-    return YES;
-  } else {
-    return NO;
-  }
-}
-
--(NSArray *)figureOutBlackKeys {
-  NSArray *theBlackKeys = @[@[]];
-  switch (_tonesPerOctave) {
-    case 12:
-      theBlackKeys = @[@[@1, @3, @6, @8, @10]];
-      break;
-    case 17:
-      theBlackKeys = @[@[@2, @5, @9, @12, @15], @[@1, @4, @8, @11, @14]];
-      break;
-    case 19:
-      theBlackKeys = @[@[@7, @18], @[@2, @5, @10, @13, @16], @[@1, @4, @9, @12, @15]];
-      break;
-    case 24:
-      theBlackKeys = @[@[@9, @23], @[@3, @7, @13, @17, @21], @[@2, @6, @12, @16, @20], @[@1, @5, @11, @15, @19]];
-      break;
-    case 31:
-      theBlackKeys = @[@[@4, @9, @17, @22, @27], @[@12, @30], @[@3, @8, @16, @21, @26], @[@2, @7, @15, @20, @25], @[@11, @29], @[@1, @6, @14, @19, @24]];
-      break;
-    case 41:
-      theBlackKeys = @[@[@6, @13, @23, @30, @37], @[@5, @12, @22, @29, @36], @[@16, @40], @[@4, @11, @21, @28, @35], @[@3, @10, @20, @27, @34], @[@15, @39], @[@2, @9, @19, @26, @33], @[@1, @8, @18, @25, @32]];
-      break;
-  }
-  return theBlackKeys;
-}
-
--(CGFloat)getBlackKeyTypeGivenIndexRow:(NSUInteger)indexRow {
-  NSArray *blackKeyTypes;
-  switch (_tonesPerOctave) {
-    case 12:
-      blackKeyTypes = @[@(11/18.f + 0.00001f)]; // regular black key
-      break;
-    case 17:
-      blackKeyTypes = @[@(2/3.f), @(1/3.f)];
-      break;
-    case 19:
-      blackKeyTypes = @[@(11/18.f + 0.00001f), @(2/3.f - 1/15.f - 0.00001f), @(1/3.f + 1/15.f + 0.00001f)];
-      break;
-    case 24:
-      blackKeyTypes = @[@(11/18.f + 0.00001f), @(3/4.f - 1/12.f - 0.00001f), @(2/4.f), @(1/4.f + 1/12.f + 0.00001f)];
-      break;
-    case 31:
-      blackKeyTypes = @[@(4/5.f), @(2/3.f - 1/15.f - 0.00001f), @(3/5.f), @(2/5.f), @(1/3.f + 1/15.f + 0.00001f), @(1/5.f)];
-      break;
-    case 41:
-      blackKeyTypes = @[@(6/7.f - 3/42.f - 0.00002f), @(5/7.f - 2/42.f - 0.00002f), @(2/3.f - 1/9.f - 0.00001f),
-                        @(4/7.f - 1/42.f - 0.00002f), @(3/7.f + 1/42.f + 0.00002f), @(1/3.f + 1/9.f + 0.00001f),
-                        @(2/7.f + 2/42.f + 0.00002f), @(1/7.f + 3/42.f + 0.00002f)];
-      break;
-  }
-  return [blackKeyTypes[indexRow] floatValue];
-}
-
--(CGFloat)getBlackKeyHeightMultiplierGivenBlackKeyType:(CGFloat)blackKeyType {
-  if (blackKeyType == 11/18.f + 0.00001f) {
-    return 11/18.f;
-  } else if (blackKeyType == 2/3.f - 1/15.f - 0.00001f) {
-    return 2/3.f;
-  } else if (blackKeyType == 1/3.f + 1/15.f + 0.00001f) {
-    return 1/3.f;
-  } else if (blackKeyType == 3/4.f - 1/12.f - 0.00001f) {
-    return 3/4.f;
-  } else if (blackKeyType == 1/4.f + 1/12.f + 0.00001f) {
-    return 1/4.f;
-  } else if (blackKeyType == 6/7.f - 3/42.f - 0.00002f) {
-    return 6/7.f;
-  } else if (blackKeyType == 5/7.f - 2/42.f - 0.00002f) {
-    return 5/7.f;
-  } else if (blackKeyType == 4/7.f - 1/42.f - 0.00002f) {
-    return 4/7.f;
-  } else if (blackKeyType == 3/7.f + 1/42.f + 0.00002f) {
-    return 3/7.f;
-  } else if (blackKeyType == 2/7.f + 2/42.f + 0.00002f) {
-    return 2/7.f;
-  } else if (blackKeyType == 1/7.f + 3/42.f + 0.00002f) {
-    return 1/7.f;
-  } else if (blackKeyType == 2/3.f - 1/9.f - 0.00001f) {
-      return 2/3.f;
-  } else if (blackKeyType == 1/3.f + 1/9.f + 0.00001f) {
-      return 1/3.f;
-  }
-  return blackKeyType;
-}
-
--(NSArray *)figureOutInitialExtraMultipliers {
-  NSArray *initialExtraMultipliers = @[];
-  switch (_tonesPerOctave) {
-    case 12:
-      initialExtraMultipliers = @[@0];
-      break;
-    case 17:
-      initialExtraMultipliers = @[@0, @0];
-      break;
-    case 19:
-      initialExtraMultipliers = @[@2, @0, @0];
-      break;
-    case 24:
-      initialExtraMultipliers = @[@2, @0, @0, @0];
-      break;
-    case 31:
-      initialExtraMultipliers = @[@0, @2, @0, @0, @2, @0];
-      break;
-    case 41:
-      initialExtraMultipliers = @[@0, @0, @2, @0, @0, @2, @0, @0];
-      break;
-  }
-  return initialExtraMultipliers;
-}
-
--(CGFloat)getGapSizeGivenScaleDegree:(NSNumber *)scaleDegree {
-  NSArray *lastBlackKeysBeforeGap;
-  NSArray *gapSizes = @[];
-  switch (_tonesPerOctave) {
-    case 12:
-      lastBlackKeysBeforeGap = @[@3, @10];
-      gapSizes = @[@1, @1];
-      break;
-    case 17:
-      lastBlackKeysBeforeGap = @[@4, @5, @14, @15];
-      gapSizes = @[@1, @1, @1, @1];
-      break;
-    case 19:
-      lastBlackKeysBeforeGap = @[@4, @5, @7, @15, @16, @18];
-      gapSizes = @[@1, @1, @3, @1, @1, @2];
-      break;
-    case 24:
-      lastBlackKeysBeforeGap = @[@5, @6, @7, @9, @19, @20, @21, @23];
-      gapSizes = @[@1, @1, @1, @3, @1, @1, @1, @2];
-      break;
-    case 31:
-      lastBlackKeysBeforeGap = @[@6, @7, @8, @9, @11, @12, @24, @25, @26, @27, @29, @30];
-      gapSizes = @[@1, @1, @1, @1, @3, @3, @1, @1, @1, @1, @2, @2];
-      break;
-    case 41:
-      lastBlackKeysBeforeGap = @[@8, @9, @10, @11, @12, @13, @15, @16, @32, @33, @34, @35, @36, @37, @39, @40];
-      gapSizes = @[@1, @1, @1, @1, @1, @1, @3, @3, @1, @1, @1, @1, @1, @1, @2, @2];
-  }
-  if ([lastBlackKeysBeforeGap containsObject:scaleDegree]) {
-    NSInteger gapRowIndex = [lastBlackKeysBeforeGap indexOfObject:scaleDegree];
-    return [gapSizes[gapRowIndex] floatValue];
-  }
-  return 0.f;
-}
-
-#pragma mark - keyboard methods
-
--(void)keyPressed:(Key *)sender {
-  float frequency = _lowestTone * pow(2.f, (sender.tag - 1000.f) / _tonesPerOctave);
-    //  NSLog(@"frequency %f", frequency);
-  audioData.myMandolin->setFrequency(frequency);
-  audioData.myMandolin->pluck(0.7f);
-  
-  sender.backgroundColor = sender.highlightedColour;
-}
-
--(void)keyLifted:(Key *)sender {
-  [UIView animateWithDuration:0.25f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-    sender.backgroundColor = sender.normalColour;
-  } completion:nil];
-}
-
--(void)keysPressed:(UIGestureRecognizer *)tapGesture {
-  if (tapGesture.state == UIGestureRecognizerStateEnded) {
-    NSInteger numberOfTaps = tapGesture.numberOfTouches;
-    for (int i=0; i<numberOfTaps; i++) {
-      for (Key *key in self.scrollView.subviews) {
-        CGPoint point = [tapGesture locationInView:self.scrollView];
-        if (CGRectContainsPoint(key.bounds, point)) {
-          NSLog(@"Two touches");
-          [self keyPressed:key];
-        }
-      }
-    }
-  }
+  NSUInteger perfectFifth = [KeyboardLogic findPerfectFifthWithTonesPerOctave:tonesPerOctave];
+  return perfectFifth;
 }
 
 #pragma mark - archiver methods
@@ -627,11 +616,83 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 #pragma mark - app methods
 
 -(UIStatusBarStyle)preferredStatusBarStyle {
-  return UIStatusBarStyleLightContent;
+  if ([_colourStyle isEqualToString:@"noColour"] && [_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    return UIStatusBarStyleDefault;
+  } else {
+    return UIStatusBarStyleLightContent;
+  }
 }
 
 -(void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
+}
+
+  // TODO: delete all this
+
+
+
+
+
+
+
+
+
+#pragma mark - delegate methods for debugging
+
+-(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+  NSLog(@"touches began, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+  [self.scrollView gestureRecognizerShouldBegin:self.scrollView.panGestureRecognizer];
+//  if (_knownTouchEventAndKeyBeingSounded) {
+//    [_knownTouchEventAndKeyBeingSounded[@"key"] resignFirstResponder];
+//  }
+}
+
+-(void)customScrollViewTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  NSLog(@"touches moved, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+//  if (_knownTouchEventAndKeyBeingSounded) {
+//    [_knownTouchEventAndKeyBeingSounded[@"key"] resignFirstResponder];
+//  }
+}
+
+-(void)customScrollViewTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+  NSLog(@"touches moved, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+}
+
+-(void)customScrollViewTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+  NSLog(@"custom scrollview touches cancelled");
+}
+
+-(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+  NSLog(@"will begin dragging, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
+  NSLog(@"scrollview will begin decelerating");
+  
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+  NSLog(@"scrollview did end dragging");
+  
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
+  NSLog(@"scrollview will end dragging");
+  
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+  NSLog(@"scrollview did end decelerating");
+  
+  [self updateKeyUnderTouchAfterScroll];
+}
+
+-(void)scrollViewDidScrollToTop:(UIScrollView *)scrollView {
+  NSLog(@"scrollview did scroll to top");
 }
 
 @end

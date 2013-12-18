@@ -493,14 +493,14 @@
 -(void)coverPicker:(UIPickerView *)picker {
   picker.userInteractionEnabled = NO;
   if (picker == self.gridIntervalPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
       _gridPickerCover.hidden = NO;
       _gridPickerCover.alpha = 1.f;
     } completion:^(BOOL finished) {
       [picker reloadAllComponents];
     }];
   } else if (picker == self.colourPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
       _colourPickerCover.hidden = NO;
       _colourPickerCover.alpha = 1.f;
     } completion:^(BOOL finished) {
@@ -512,14 +512,14 @@
 -(void)uncoverPicker:(UIPickerView *)picker {
   picker.userInteractionEnabled = YES;
   if (picker == self.gridIntervalPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
       _gridPickerCover.alpha = 0.1f;
     } completion:^(BOOL finished) {
       _gridPickerCover.hidden = YES;
       [picker reloadAllComponents];
     }];
   } else if (picker == self.colourPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
       _colourPickerCover.alpha = 0.1f;
     } completion:^(BOOL finished) {
       _colourPickerCover.hidden = YES;

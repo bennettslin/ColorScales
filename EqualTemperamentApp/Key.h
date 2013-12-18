@@ -8,11 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol KeyDelegate;
+
 @interface Key : UIButton
 
 @property (strong, nonatomic) UIColor *normalColour;
 @property (strong, nonatomic) UIColor *highlightedColour;
 @property (strong, nonatomic) UILabel *characterLabel;
+@property NSUInteger noModScaleDegree;
+
+@property (weak, nonatomic) id<KeyDelegate> delegate;
 
 -(id)initWithFrame:(CGRect)frame givenColourStyle:(NSString *)colourStyle
                        andRootColourWheelPosition:(NSNumber *)rootColourWheelPosition
@@ -21,5 +26,12 @@
                                 andTonesPerOctave:(NSUInteger)tonesPerOctave
                                   andPerfectFifth:(NSUInteger)perfectFifth
                                    andScaleDegree:(NSNumber *)scaleDegreeObject;
+@end
 
+@protocol KeyDelegate <NSObject>
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
 @end

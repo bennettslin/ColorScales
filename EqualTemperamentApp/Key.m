@@ -24,6 +24,9 @@ const NSUInteger coloursInPicker = 24;
                                    andScaleDegree:(NSNumber *)scaleDegreeObject {
   self = [super initWithFrame:frame];
   if (self) {
+    
+    self.layer.drawsAsynchronously = YES;
+    self.multipleTouchEnabled = NO;
     NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
     [self findColoursWithColourStyle:colourStyle
           andRootColourWheelPosition:[rootColourWheelPosition unsignedIntegerValue]
@@ -105,7 +108,7 @@ const NSUInteger coloursInPicker = 24;
       CGFloat blueHighlight = 76/80.f;
       
       self.normalColour = [UIColor colorWithRed:redValue green:greenValue blue:blueValue alpha:1.f];
-//      [self addGradientToKeyWithColour:self.normalColour givenColourStyle:@"whiteKey"];
+      [self addGradientToKeyWithColour:self.normalColour givenColourStyle:@"whiteKey"];
       self.highlightedColour = [UIColor colorWithRed:redHighlight green:greenHighlight blue:blueHighlight alpha:1.f];
     } else {
         // black key
@@ -141,7 +144,7 @@ const NSUInteger coloursInPicker = 24;
       colourWheelPosition = fmodf((1.f - ((float)scaleDegree / tonesPerOctave) + (rootColourWheelPosition / (CGFloat)coloursInPicker)), 1.f);
     }
     
-    self.normalColour = [UIColor findNormalKeyColour:colourWheelPosition withMinBright:0.65f];
+    self.normalColour = [UIColor findNormalKeyColour:colourWheelPosition withMinBright:0.6f];
     [self findColouredKeyHighlightedColourGivenColourStyle:@"coloured"]; // for both fifthWheel and stepwise
     [self addGradientToKeyWithColour:self.normalColour givenColourStyle:@"coloured"];
     if (keyHeight != 1.f) { // only adds shadow if not a white key
@@ -167,24 +170,18 @@ const NSUInteger coloursInPicker = 24;
     gradientGreen = greenValue + ((1.f - greenValue) / 4.f);
     gradientBlue = blueValue + ((1.f - blueValue) / 4.f);
   } else {
-    gradientRed = redValue * 13/20.f;
-    gradientGreen = greenValue * 13/20.f;
-    gradientBlue = blueValue * 13/20.f;
+    gradientRed = redValue * 9/20.f;
+    gradientGreen = greenValue * 9/20.f;
+    gradientBlue = blueValue * 9/20.f;
   }
   topGradient = [UIColor colorWithRed:gradientRed green:gradientGreen blue:gradientBlue alpha:0.5f];
   bottomGradient = [UIColor colorWithRed:redValue green:greenValue blue:blueValue alpha:0.5f];
   
   CAGradientLayer *gradientLayer = [CAGradientLayer layer];
   gradientLayer.frame = self.layer.bounds;
-  gradientLayer.colors = [NSArray arrayWithObjects:
-                          (id)topGradient.CGColor,
-                          (id)bottomGradient.CGColor,
-                          nil];
+  gradientLayer.colors = @[(id)topGradient.CGColor, (id)bottomGradient.CGColor];
   
-  gradientLayer.locations = [NSArray arrayWithObjects:
-                             [NSNumber numberWithFloat:0.0f],
-                             [NSNumber numberWithFloat:1.0f],
-                             nil];
+  gradientLayer.locations = @[@0.f, @1.f];
   
   [self.layer addSublayer:gradientLayer];
 }
@@ -200,9 +197,9 @@ const NSUInteger coloursInPicker = 24;
   [self.normalColour getRed:&normalRed green:&normalGreen blue:&normalBlue alpha:&alpha];
   
   if ([colourStyle isEqualToString:@"coloured"]) {
-    highlightedRed = normalRed + ((1.f - normalRed) / 2.f);
-    highlightedGreen = normalGreen + ((1.f - normalGreen) / 2.f);
-    highlightedBlue = normalBlue + ((1.f - normalBlue) / 2.f);
+    highlightedRed = normalRed + ((1.f - normalRed) * 4/5.f) + 0.1f;
+    highlightedGreen = normalGreen + ((1.f - normalGreen) * 4/5.f) + 0.1f;
+    highlightedBlue = normalBlue + ((1.f - normalBlue) * 4/5.f) + 0.1f;
   } else {
       // for noColour
     highlightedRed = normalRed + ((1.f - normalRed) / 4.f);
@@ -210,8 +207,28 @@ const NSUInteger coloursInPicker = 24;
     highlightedBlue = normalBlue + ((1.f - normalBlue) / 4.f);
   }
   
-  
   self.highlightedColour = [UIColor colorWithRed:highlightedRed green:highlightedGreen blue:highlightedBlue alpha:alpha];
+}
+
+#pragma mark - overridden touch delegate methods
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate touchesBegan:touches withEvent:event fromKey:self];
+  [self isFirstResponder];
+}
+
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate touchesMoved:touches withEvent:event fromKey:self];
+  [self isFirstResponder];
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate touchesEnded:touches withEvent:event fromKey:self];
+  [self isFirstResponder];
+}
+
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate touchesCancelled:touches withEvent:event fromKey:self];
 }
 
 @end
