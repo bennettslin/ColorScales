@@ -30,6 +30,7 @@
 
 @protocol KeyDelegate <NSObject>
 
+-(void)handleTapFromKey:(Key *)key;
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;

@@ -26,7 +26,18 @@ const NSUInteger coloursInPicker = 24;
   if (self) {
     
     self.layer.drawsAsynchronously = YES;
-    self.multipleTouchEnabled = NO;
+    self.multipleTouchEnabled = YES;
+//    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sendTapToDelegate)];
+//    tapGestureRecognizer.numberOfTapsRequired = 1;
+//    
+//    [self addGestureRecognizer:tapGestureRecognizer];
+    
+//    UIGestureRecognizer *gestureRecognizer = [[UIGestureRecognizer alloc] initWithTarget:self action:@selector(sendTapToDelegate)];
+    [self addTarget:self.delegate action:@selector(handleTapFromKey:) forControlEvents:UIControlEventTouchDown];
+    [self addTarget:self.delegate action:@selector(handleTapFromKey:) forControlEvents:UIControlEventTouchDownRepeat];
+//    [self addTarget:self action:@selector(sendTapToDelegate) forControlEvents:UIControlEventTouchDown];
+//    [gestureRecognizer addTarget:self action:@selector(sendTapToDelegate) forControlEvents:UIControlEventTouchDownRepeat];
+    
     NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
     [self findColoursWithColourStyle:colourStyle
           andRootColourWheelPosition:[rootColourWheelPosition unsignedIntegerValue]
@@ -212,19 +223,21 @@ const NSUInteger coloursInPicker = 24;
 
 #pragma mark - overridden touch delegate methods
 
+-(void)sendTapToDelegate {
+  NSLog(@"send tap method called from key");
+  [self.delegate handleTapFromKey:self];
+}
+
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   [self.delegate touchesBegan:touches withEvent:event fromKey:self];
-  [self isFirstResponder];
 }
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
   [self.delegate touchesMoved:touches withEvent:event fromKey:self];
-  [self isFirstResponder];
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
   [self.delegate touchesEnded:touches withEvent:event fromKey:self];
-  [self isFirstResponder];
 }
 
 -(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {

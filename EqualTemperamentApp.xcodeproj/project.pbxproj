@@ -167,6 +167,7 @@
 		3FAA721D185846290041268E /* HelpViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA721B185846290041268E /* HelpViewController.xib */; };
 		3FAA7221185848880041268E /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA721F185848880041268E /* SettingsViewController.m */; };
 		3FAA7222185848880041268E /* SettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7220185848880041268E /* SettingsViewController.xib */; };
+		3FEE2FB018627123002CF633 /* KeyboardOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FEE2FAF18627123002CF633 /* KeyboardOverlay.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -452,6 +453,8 @@
 		3FAA721E185848880041268E /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		3FAA721F185848880041268E /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		3FAA7220185848880041268E /* SettingsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingsViewController.xib; sourceTree = "<group>"; };
+		3FEE2FAE18627123002CF633 /* KeyboardOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyboardOverlay.h; sourceTree = "<group>"; };
+		3FEE2FAF18627123002CF633 /* KeyboardOverlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyboardOverlay.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -526,6 +529,8 @@
 				3FAA7219185846290041268E /* HelpViewController.h */,
 				3FAA721A185846290041268E /* HelpViewController.m */,
 				3FAA721B185846290041268E /* HelpViewController.xib */,
+				3FEE2FAE18627123002CF633 /* KeyboardOverlay.h */,
+				3FEE2FAF18627123002CF633 /* KeyboardOverlay.m */,
 				3F67660918611A32005132E5 /* CustomScrollView.h */,
 				3F67660A18611A32005132E5 /* CustomScrollView.m */,
 				3F7E3625185ABB4E00335286 /* Key.h */,
@@ -1025,6 +1030,7 @@
 				3FAA71EA185841EC0041268E /* NRev.cpp in Sources */,
 				3FAA71F5185841EC0041268E /* Rhodey.cpp in Sources */,
 				3FAA71F8185841EC0041268E /* Shakers.cpp in Sources */,
+				3FEE2FB018627123002CF633 /* KeyboardOverlay.m in Sources */,
 				3FAA71D1185841EC0041268E /* FileWrite.cpp in Sources */,
 				3FAA7208185841EC0041268E /* TwoPole.cpp in Sources */,
 				3FAA721C185846290041268E /* HelpViewController.m in Sources */,
