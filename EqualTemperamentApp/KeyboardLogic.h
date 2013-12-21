@@ -16,6 +16,6 @@
 +(CGFloat)getBlackKeyHeightMultiplierGivenBlackKeyType:(CGFloat)blackKeyType;
 +(NSArray *)figureOutInitialExtraMultipliersGivenTonesPerOctave:(NSUInteger)tonesPerOctave;
 +(CGFloat)getGapSizeGivenScaleDegree:(NSNumber *)scaleDegree andTonesPerOctave:(NSUInteger)tonesPerOctave;
-
 +(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave;
+
 @end

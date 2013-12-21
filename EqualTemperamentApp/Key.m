@@ -8,12 +8,21 @@
 
 #import "Key.h"
 #import "UIColor+ColourWheel.h"
+#import "NSObject+ObjectID.h"
+#import "KeyGestureRecognizer.h"
+#import "KeyTouch.h"
 
 const NSUInteger coloursInPicker = 24;
+
+@interface Key () <KeyGestureRecognizerDelegate, UIGestureRecognizerDelegate>
+
+@end
 
 @implementation Key {
   UIColor *_backgroundColour;
 }
+
+#pragma mark - instantiation methods
 
 -(id)initWithFrame:(CGRect)frame givenColourStyle:(NSString *)colourStyle
                        andRootColourWheelPosition:(NSNumber *)rootColourWheelPosition
@@ -26,17 +35,13 @@ const NSUInteger coloursInPicker = 24;
   if (self) {
     
     self.layer.drawsAsynchronously = YES;
-    self.multipleTouchEnabled = YES;
-//    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sendTapToDelegate)];
-//    tapGestureRecognizer.numberOfTapsRequired = 1;
-//    
-//    [self addGestureRecognizer:tapGestureRecognizer];
     
-//    UIGestureRecognizer *gestureRecognizer = [[UIGestureRecognizer alloc] initWithTarget:self action:@selector(sendTapToDelegate)];
-    [self addTarget:self.delegate action:@selector(handleTapFromKey:) forControlEvents:UIControlEventTouchDown];
-    [self addTarget:self.delegate action:@selector(handleTapFromKey:) forControlEvents:UIControlEventTouchDownRepeat];
-//    [self addTarget:self action:@selector(sendTapToDelegate) forControlEvents:UIControlEventTouchDown];
-//    [gestureRecognizer addTarget:self action:@selector(sendTapToDelegate) forControlEvents:UIControlEventTouchDownRepeat];
+    self.multipleTouchEnabled = YES;
+    KeyGestureRecognizer *keyGestureRecognizer = [[KeyGestureRecognizer alloc] init];
+    keyGestureRecognizer.delegate = self;
+    [self addGestureRecognizer:keyGestureRecognizer];
+  
+    self.touchedThisManyTimes = 0;
     
     NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
     [self findColoursWithColourStyle:colourStyle
@@ -46,6 +51,7 @@ const NSUInteger coloursInPicker = 24;
                  givenTonesPerOctave:tonesPerOctave
                      andPerfectFifth:perfectFifth
                       andScaleDegree:scaleDegree];
+    
     if ([keyCharacter isEqualToString:@"numbered"]) {
       [self addLabelGivenColourStyle:colourStyle andBlackKeyHeight:(CGFloat)keyHeight forScaleDegree:scaleDegree];
     }
@@ -221,27 +227,54 @@ const NSUInteger coloursInPicker = 24;
   self.highlightedColour = [UIColor colorWithRed:highlightedRed green:highlightedGreen blue:highlightedBlue alpha:alpha];
 }
 
-#pragma mark - overridden touch delegate methods
+#pragma mark - touch methods
 
--(void)sendTapToDelegate {
-  NSLog(@"send tap method called from key");
-  [self.delegate handleTapFromKey:self];
+-(void)addTouchToThisKey:(KeyTouch *)keyTouch {
+  if (self.mostRecentTouch != keyTouch) {
+    [self.delegate pressKey:self];
+    self.backgroundColor = self.highlightedColour;
+  }
+  self.mostRecentTouch = keyTouch;
+  [self.delegate addKeyToKeysSounded:self];
 }
 
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-  [self.delegate touchesBegan:touches withEvent:event fromKey:self];
+-(void)removeTouchFromThisKey:(KeyTouch *)keyTouch {
+  if (self.mostRecentTouch == keyTouch) {
+    [self.delegate liftKey:self];
+    self.backgroundColor = self.normalColour;
+    self.mostRecentTouch = nil;
+    [self.delegate removeKeyFromKeysSounded:self];
+  }
 }
 
--(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-  [self.delegate touchesMoved:touches withEvent:event fromKey:self];
+-(void)removeThisKey {
+  [self.delegate liftKey:self];
+  self.backgroundColor = self.normalColour;
+  self.mostRecentTouch = nil;
+  [self.delegate removeKeyFromKeysSounded:self];
+  
 }
 
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-  [self.delegate touchesEnded:touches withEvent:event fromKey:self];
+#pragma mark - gesture recognizer delegate methods
+
+-(void)keyTouchesBegan:(NSSet *)keyTouches withEvent:(UIEvent *)event {
+//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
+  [self.delegate keyTouchesBegan:keyTouches withEvent:event];
 }
 
--(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  [self.delegate touchesCancelled:touches withEvent:event fromKey:self];
+-(void)keyTouchesMoved:(NSSet *)keyTouches withEvent:(UIEvent *)event {
+//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
+  [self.delegate keyTouchesMoved:keyTouches withEvent:event];
+}
+
+-(void)keyTouchesEnded:(NSSet *)keyTouches withEvent:(UIEvent *)event {
+//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
+  [self.delegate keyTouchesEnded:keyTouches withEvent:event];
+}
+
+-(void)keyTouchesCancelled:(NSSet *)keyTouches withEvent:(UIEvent *)event {
+//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
+  [self.delegate keyTouchesCancelled:keyTouches withEvent:event];
 }
 
 @end

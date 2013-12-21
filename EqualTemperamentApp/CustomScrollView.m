@@ -7,7 +7,6 @@
 //
 
 #import "CustomScrollView.h"
-#import "KeyboardOverlay.h"
 #import "Key.h"
 
 @implementation CustomScrollView
@@ -15,14 +14,14 @@
 -(id)initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
   if (self) {
-
+    
   }
   return self;
 }
 
   // This was the magical method that fixed everything! Yay!
 -(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
-  if ([touch.view isKindOfClass:[KeyboardOverlay class]] || [touch.view isKindOfClass:[Key class]]) {
+  if ([touch.view isKindOfClass:[Key class]]) {
     return NO; // Darn tootin'!
   }
   return YES;

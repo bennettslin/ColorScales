@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+@class KeyTouch;
 
 @protocol KeyDelegate;
 
@@ -16,6 +17,11 @@
 @property (strong, nonatomic) UIColor *highlightedColour;
 @property (strong, nonatomic) UILabel *characterLabel;
 @property NSUInteger noModScaleDegree;
+@property (strong, nonatomic) KeyTouch *mostRecentTouch;
+@property BOOL isTouched;
+
+@property NSUInteger touchedThisManyTimes;
+@property (strong, nonatomic) NSMutableSet *touches;
 
 @property (weak, nonatomic) id<KeyDelegate> delegate;
 
@@ -26,13 +32,26 @@
                                 andTonesPerOctave:(NSUInteger)tonesPerOctave
                                   andPerfectFifth:(NSUInteger)perfectFifth
                                    andScaleDegree:(NSNumber *)scaleDegreeObject;
+
+-(void)addTouchToThisKey:(UITouch *)touch;
+-(void)removeTouchFromThisKey:(UITouch *)touch;
+-(void)removeThisKey;
+
 @end
 
 @protocol KeyDelegate <NSObject>
 
--(void)handleTapFromKey:(Key *)key;
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
--(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
--(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key;
+//-(void)keyTapped:(Key *)sender;
+
+-(void)keyTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)keyTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)keyTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)keyTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event;
+
+-(void)pressKey:(Key *)key;
+-(void)liftKey:(Key *)key;
+-(void)addKeyToKeysSounded:(Key *)key;
+-(void)removeKeyFromKeysSounded:(Key *)key;
+-(UIScrollView *)tellKeyScrollview;
+
 @end

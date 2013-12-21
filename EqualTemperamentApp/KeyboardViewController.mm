@@ -13,7 +13,8 @@
 #import "Key.h"
 #import "KeyboardLogic.h"
 #import "CustomScrollView.h"
-#import "KeyboardOverlay.h"
+#import "NSObject+ObjectID.h"
+#import "KeyTouch.h"
 
 #define SRATE 44100
 #define FRAMESIZE 128
@@ -42,7 +43,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   struct AudioData audioData;
 }
 @property (strong, nonatomic) CustomScrollView *scrollView;
-@property (strong, nonatomic) KeyboardOverlay *keyboardOverlay;
 @property (strong, nonatomic) DataModel *dataModel;
 
 @end
@@ -72,390 +72,10 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   NSString *_userButtonsPosition;
 
   UIEvent *_event; // this is only for the scrollview to know the event
-  NSMutableArray *_allSoundedKeys; // again, for scrollview's benefit, added and removed in keyPressed and keyLifted methods only
-  NSMutableSet *_allKeysMutable;
-  NSSet *_allKeys;
-//  NSMutableDictionary *_knownTouchEventAndKeyBeingSounded;
-}
-
-#pragma mark - touch methods
-//
-//-(void)keyboardOverlayTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-//  NSLog(@"keyboard overlay touches began");
-//  
-//  UITouch *touch = [touches anyObject];
-//  CGPoint touchLocation = [touch locationInView:self.keyboardOverlay];
-//  
-//  UIView *view = [self.keyboardOverlay hitTest:touchLocation withEvent:event];
-//  NSLog(@"this is the view %@", view);
-//}
-//
-//-(void)keyboardOverlayTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-//  
-//}
-//
-//-(void)keyboardOverlayTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-//  
-//}
-//
-//-(void)keyboardOverlayTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-//  
-//}
-
-//-(void)updateKeyUnderTouchAfterScroll {
-//    // checks to see if
-//  if (_knownTouchEventAndKeyBeingSounded) {
-//    CGPoint touchLocation = [_knownTouchEventAndKeyBeingSounded[@"touch"] locationInView:self.scrollView];
-//    UIView *currentViewBeingTouched =
-//      [self.scrollView hitTest:touchLocation withEvent:_knownTouchEventAndKeyBeingSounded[@"event"]];
-//    if ([currentViewBeingTouched isKindOfClass:[Key class]]) {
-//      if (_knownTouchEventAndKeyBeingSounded[@"key"] != currentViewBeingTouched) {
-//        Key *currentKeyBeingTouched = (Key *)currentViewBeingTouched;
-//        [self keyLifted:_knownTouchEventAndKeyBeingSounded[@"key"]];
-//        [self keyPressed:currentKeyBeingTouched];
-//        _knownTouchEventAndKeyBeingSounded[@"key"] = currentViewBeingTouched;
-//        NSLog(@"After scroll, key under touch is now %i", currentKeyBeingTouched.noModScaleDegree);
-//      }
-//    }
-//  }
-//}
-
-
-
--(void)handleTapFromKey:(Key *)key {
-//  NSLog(@"from a tap!");
-//  [self keyPressed:key];
-//  [self keyLifted:key];
-}
-
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
-  
-  _event = event;
-  
-    // kludge solution to scrollView freezing out of bounds after user premature taps key
-  if (self.scrollView.contentOffset.x < 0.f) {
-    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
-      self.scrollView.contentOffset = CGPointMake(0, 0);
-    } completion:nil];
-  } else if (self.scrollView.contentOffset.x > (float)self.scrollView.contentSize.width - (float)self.scrollView.frame.size.width) {
-    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
-      self.scrollView.contentOffset = CGPointMake(self.scrollView.contentSize.width - self.scrollView.frame.size.width, 0);
-    } completion:nil];
-  }
-//  NSLog(@"this is the CGPoint %f", self.scrollView.contentSize.width - self.scrollView.frame.size.width);
-  
-  UITouch *thisTouch = [touches anyObject];
-  NSLog(@"thisTouch began %@", thisTouch.description);
-//  NSLog(@"number of gesture recognizers %i", [thisTouch.gestureRecognizers count]);
-//  for (UIGestureRecognizer *gestureRecognizer in thisTouch.gestureRecognizers) {
-//    gestureRecognizer.delaysTouchesBegan = NO;
-//    gestureRecognizer.delaysTouchesEnded = NO;
-//    gestureRecognizer.cancelsTouchesInView = NO;
-//    gestureRecognizer.delegate = self;
-//    NSLog(@"it's a tap gesture %@", gestureRecognizer.class);
-//  }
-//
-//  NSLog(@"this touch's gesture recognizers: %@", thisTouch.gestureRecognizers);
-  
-  
-  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-  UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:event];
-  
-    //  if ([thisTouch.view isKindOfClass:[Key class]]) { // don't bother if it's not a key!
-  
-  BOOL touchingNewKey = YES;
-  for (UITouch *otherTouch in event.allTouches) {
-    CGPoint otherTouchLocation = [otherTouch locationInView:self.scrollView];
-    UIView *otherTouchHitTest = [self.scrollView hitTest:otherTouchLocation withEvent:event];
-    if (thisTouch != otherTouch && thisTouchHitTest == otherTouchHitTest) {
-      touchingNewKey = NO;
-      return; // do nothing, as this key is already being sounded by another touch
-    }
-  }
-  NSLog(@"touching new key %i", touchingNewKey);
-//  if (touchingNewKey) {
-//    CGPoint thisTouchPreviousLocation = [thisTouch previousLocationInView:self.scrollView];
-//    UIView *thisTouchPreviousHitTest = [self.scrollView hitTest:thisTouchPreviousLocation withEvent:event];
-//    NSLog(@"previous hit test is %@", thisTouchPreviousHitTest);
-//    if (thisTouchHitTest == thisTouchPreviousHitTest) {
-//        // touch has only moved within same key, so do nothing
-//      return;
-//    } else if (thisTouchHitTest != thisTouchPreviousHitTest) {
-  if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-    [self keyPressed:(Key *)thisTouchHitTest fromTouch:thisTouch];
-  }
-//      if ([thisTouchPreviousHitTest isKindOfClass:[Key class]]) {
-//        [self keyLifted:(Key *)thisTouchPreviousHitTest];
-//      }
-//    }
-//      //    }
-//  }
-  
-  NSLog(@"touches began tap count %i", thisTouch.tapCount);
-  NSLog(@"number of event touches %i", [event.allTouches count]);
-  NSLog(@"number of touches %i", [touches count]);
-  
-  
-//  [self touchesMoved:touches withEvent:event fromKey:key];
-//  NSLog(@"touch began for key %i", key.noModScaleDegree);
-  
-//  NSLog(@"count of touches %i in touches began: %@", [touches count], touches);
-//  NSLog(@"count of event all touches %i in touches began: %@", [[event allTouches] count], [event allTouches]);
-//
-//  NSLog(@"Event ID %@", event.description);
-//  
-//  UITouch *touch = [touches anyObject];
-//  CGPoint touchLocation = [touch locationInView:self.scrollView];
-//  
-//  UIView *currentViewBeingTouched = [self.scrollView hitTest:touchLocation withEvent:event];
-//  Key *currentKeyBeingTouched;
-//  BOOL currentViewIsAKey = [currentViewBeingTouched isKindOfClass:[Key class]];
-//  if (!currentViewIsAKey) {
-//      // not instantiating a real key here, just signifies that there is no key under this touch
-//    currentKeyBeingTouched = [[Key alloc] init];
-//    currentKeyBeingTouched.noModScaleDegree = 1000;
-//  } else {
-//    currentKeyBeingTouched = (Key *)currentViewBeingTouched;
-//  }
-//  NSLog(@"current key being touched is key %i", currentKeyBeingTouched.noModScaleDegree);
-//  
-//  if (!_knownTouchEventAndKeyBeingSounded) {
-//      // no recorded touch, event and key
-//    if (currentKeyBeingTouched.noModScaleDegree != 1000) {
-//      _knownTouchEventAndKeyBeingSounded = [[NSMutableDictionary alloc] initWithObjectsAndKeys:touch, @"touch", currentKeyBeingTouched, @"key", event, @"event", nil];
-//      [self touch:touch movedIntoKey:currentKeyBeingTouched];
-//    }
-//    
-//  } else if (_knownTouchEventAndKeyBeingSounded[@"key"] == currentKeyBeingTouched) {
-//      // do nothing, since it's repressing the same key
-//  } else {
-//      // gets rid of old touch
-//    
-//    [self touch:_knownTouchEventAndKeyBeingSounded[@"touch"] movedOutOfKey:_knownTouchEventAndKeyBeingSounded[@"key"]];
-//    
-//      // makes new touch
-//    _knownTouchEventAndKeyBeingSounded[@"touch"] = touch;
-//    _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
-//    _knownTouchEventAndKeyBeingSounded[@"event"] = event;
-//    
-//    [self touch:touch movedIntoKey:currentKeyBeingTouched];
-//  }
-  [self updateKeys];
-}
-
--(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
-  _event = event;
-  UITouch *thisTouch = [touches anyObject];
-//  NSLog(@"thisTouch moved %@", thisTouch.description);
-  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-  UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:event];
-  
-//  if ([thisTouch.view isKindOfClass:[Key class]]) { // don't bother if it's not a key!
-  
-    BOOL touchingNewKey = YES;
-    for (UITouch *otherTouch in event.allTouches) {
-      CGPoint otherTouchLocation = [otherTouch locationInView:self.scrollView];
-      UIView *otherTouchHitTest = [self.scrollView hitTest:otherTouchLocation withEvent:event];
-      if (thisTouch != otherTouch && thisTouchHitTest == otherTouchHitTest) {
-        touchingNewKey = NO;
-        return; // do nothing, as this key is already being sounded by another touch
-      }
-    }
-//  NSLog(@"touching new key %i", touchingNewKey);
-    if (touchingNewKey) {
-      CGPoint thisTouchPreviousLocation = [thisTouch previousLocationInView:self.scrollView];
-      UIView *thisTouchPreviousHitTest = [self.scrollView hitTest:thisTouchPreviousLocation withEvent:event];
-//      NSLog(@"previous hit test is %@", thisTouchPreviousHitTest);
-      if (thisTouchHitTest == thisTouchPreviousHitTest && thisTouch.tapCount == 1) {
-          // touch has only moved within same key, so do nothing
-        return;
-      } else if (thisTouchHitTest != thisTouchPreviousHitTest) {
-        if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-          [self keyPressed:(Key *)thisTouchHitTest fromTouch:thisTouch];
-        }
-        if ([thisTouchPreviousHitTest isKindOfClass:[Key class]]) {
-          [self keyLifted:(Key *)thisTouchPreviousHitTest fromTouch:thisTouch];
-        }
-      }
-//    }
-  }
-  NSLog(@"touches moved tap count %i", thisTouch.tapCount);
-  
-//  NSLog(@"count of touches %i in touches moved: %@", [touches count], touches);
-//  NSLog(@"count of event all touches %i in touches moved: %@", [[event allTouches] count], [event allTouches]);
-//  UITouch *touch = [touches anyObject];
-//  CGPoint touchLocation = [touch locationInView:self.scrollView];
-//  
-//  if (!_knownTouchEventAndKeyBeingSounded) {
-//      // no recorded touch, event and key
-//    _knownTouchEventAndKeyBeingSounded = [[NSMutableDictionary alloc] initWithObjectsAndKeys:touch, @"touch", key, @"key", event, @"event", nil];
-//    [self touch:touch movedIntoKey:key];
-//  }
-//  
-//    // retrieve state for this touch recorded in the array
-//  Key *knownKeyForThisTouch;
-//  if (touch == _knownTouchEventAndKeyBeingSounded[@"touch"]) {
-//    knownKeyForThisTouch = _knownTouchEventAndKeyBeingSounded[@"key"];
-//  }
-//
-//    // check to see if state has changed from before
-//  UIView *currentViewBeingTouched = [self.scrollView hitTest:touchLocation withEvent:event];
-//  Key *currentKeyBeingTouched;
-//  BOOL currentViewIsAKey = [currentViewBeingTouched isKindOfClass:[Key class]];
-//  if (!currentViewIsAKey) {
-//      // not instantiating a real key here, just signifies that there is no key under this touch
-//    currentKeyBeingTouched = [[Key alloc] init];
-//    currentKeyBeingTouched.noModScaleDegree = 1000;
-//  } else {
-//    currentKeyBeingTouched = (Key *)currentViewBeingTouched;
-//  }
-//  
-//  if (_knownTouchEventAndKeyBeingSounded) {
-//    if (currentKeyBeingTouched.noModScaleDegree == knownKeyForThisTouch.noModScaleDegree) {
-//        // nothing has changed
-//    } else if (knownKeyForThisTouch.noModScaleDegree != 1000 && !currentViewIsAKey) {
-//      NSLog(@"has moved from key %i to nonkey", knownKeyForThisTouch.noModScaleDegree);
-//        // touch moved from key to non-key
-//      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
-//      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
-//
-//    } else if (knownKeyForThisTouch.noModScaleDegree == 1000 && currentViewIsAKey) {
-//      NSLog(@"has moved from nonkey to key %i", knownKeyForThisTouch.noModScaleDegree);
-//        // touch moved from non-key to key
-//      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
-//      [self touch:touch movedIntoKey:currentKeyBeingTouched];
-//      
-//    } else if (knownKeyForThisTouch.noModScaleDegree != 1000 && currentViewIsAKey) {
-//      NSLog(@"has moved from key %i to key %i", knownKeyForThisTouch.noModScaleDegree, currentKeyBeingTouched.noModScaleDegree);
-//        // touch moved from key to key
-//      _knownTouchEventAndKeyBeingSounded[@"key"] = currentKeyBeingTouched;
-//      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
-//      [self touch:touch movedIntoKey:currentKeyBeingTouched];
-//    }
-//  }
-  
-  [self updateKeys];
-}
-//
-//-(void)touch:(UITouch *)touch movedOutOfKey:(Key *)key {
-////  if ([self thereIsAnotherTouchForThisKey:key underThisTouch:touch]) {
-//      // no need to lift the key
-////  } else {
-//
-//  [self keyLifted:key];
-//  
-//  touch = nil;
-////  }
-////  NSLog(@"touch %@ moved out of key %i", touch.debugDescription, key.tag - 1000);
-//}
-
-//-(void)touch:(UITouch *)touch movedIntoKey:(Key *)key {
-////  if ([self thereIsAnotherTouchForThisKey:key underThisTouch:touch]) {
-//      // no need to re-press the key
-////  } else {
-//  [self keyPressed:key];
-//  
-//  touch = nil;
-////  }
-////  NSLog(@"touch %@ moved into key %i", touch.debugDescription, key.tag - 1000);
-//}
-//
-//-(BOOL)thereIsAnotherTouchForThisKey:(Key *)key underThisTouch:(UITouch *)touch {
-////  for (NSDictionary *thisTouchAndKey in _currentViewsBeingTouchedAndKeysBeingSounded) {
-//      // establish whether there is another touch for this key
-////    if (touch != _knownTouchEventAndKeyBeingSounded[@"touch"] && key == _knownTouchEventAndKeyBeingSounded[@"key"]) {
-////      return YES;
-////    }
-////  }
-//  return NO;
-//}
-
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
-  
-  _event = event;
-  UITouch *thisTouch = [[event allTouches] anyObject];
-  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-  UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:event];
-  
-  BOOL touchingLoneKey = YES;
-  for (UITouch *otherTouch in event.allTouches) {
-    CGPoint otherTouchLocation = [otherTouch locationInView:self.scrollView];
-    UIView *otherTouchHitTest = [self.scrollView hitTest:otherTouchLocation withEvent:event];
-    if (thisTouch != otherTouch && thisTouchHitTest == otherTouchHitTest) {
-      touchingLoneKey = NO;
-    }
-  }
-  
-  if (touchingLoneKey) {
-    
-//    check that hit test is key
-    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-      [self keyLifted:(Key *)thisTouchHitTest fromTouch:thisTouch];
-    }
-  }
-
-  NSLog(@"this touch's tap count is %i", thisTouch.tapCount);
-  
-// retrieve state for this touch recorded in the array
-//  NSUInteger indexOfThisTouch;
-//  Key *knownKeyForThisTouch;
-//
-//    if (touch == _knownTouchEventAndKeyBeingSounded[@"touch"]) {
-////      indexOfThisTouch = [_currentViewsBeingTouchedAndKeysBeingSounded indexOfObject:thisTouchAndKey];
-//      knownKeyForThisTouch = _knownTouchEventAndKeyBeingSounded[@"key"];
-//      [self touch:touch movedOutOfKey:knownKeyForThisTouch];
-////      [_currentViewsBeingTouchedAndKeysBeingSounded removeObjectAtIndex:indexOfThisTouch];
-//      _knownTouchEventAndKeyBeingSounded = nil;
-//    }
-
-  
-//  NSLog(@"Touches ended for key %i", knownKeyForThisTouch.noModScaleDegree);
-  
-  [self updateKeys];
-}
-
--(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event fromKey:(Key *)key {
-  _event = event;
-  NSLog(@"touches cancelled being called");
-  [self touchesEnded:touches withEvent:event];
-  [self updateKeys];
-}
-
-#pragma mark - key sounding methods
-
--(void)keyPressed:(Key *)sender fromTouch:(UITouch *)touch {
-  if (sender.noModScaleDegree != 1000) {
-    float frequency = _lowestTone * pow(2.f, ((float)sender.noModScaleDegree) / _tonesPerOctave);
-      //  NSLog(@"frequency %f", frequency);
-    audioData.myMandolin->setFrequency(frequency);
-    audioData.myMandolin->pluck(0.7f);
-    
-//    NSLog(@"Sounding key %i", sender.noModScaleDegree);
-    NSDictionary *thisDictionary = [[NSDictionary alloc] initWithObjectsAndKeys:sender, @"key", touch, @"touch", nil];
-    [_allSoundedKeys addObject:thisDictionary];
-    sender.backgroundColor = sender.highlightedColour;
-  }
-    // ensures it gets reset if there's no touch inside this key
-}
-
--(void)keyLifted:(Key *)sender fromTouch:(UITouch *)touch {
-  
-//  NSLog(@"Lifting key %i", sender.noModScaleDegree);
-  [UIView animateWithDuration:0.25f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-    sender.backgroundColor = sender.normalColour;
-  } completion:nil];
-  
-  NSDictionary *toBeRemovedDictionary;
-  BOOL removedDictionaryExists = NO;
-  for (NSDictionary *thisDictionary in _allSoundedKeys) {
-    if (thisDictionary[@"key"] == sender && thisDictionary[@"touch"] == touch) {
-      toBeRemovedDictionary = thisDictionary;
-      removedDictionaryExists = YES;
-    }
-  }
-  if (removedDictionaryExists) {
-    [_allSoundedKeys removeObject:toBeRemovedDictionary];
-  }
+  NSMutableSet *_allSoundedKeys; // added and removed in keyPressed and keyLifted methods only
+  NSMutableArray *_allKeysMutable;
+  NSArray *_allKeys;
+//  NSMutableSet *_allKeyTouches;
 }
 
 #pragma mark - view methods
@@ -514,10 +134,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [self saveSettings];
   [self establishValuesFromTonesPerOctave];
   [self placeScrollView];
-  
   [self layoutKeysBasedOnKeyboardStyle];
-  
-//  [self layoutKeyboardOverlay];
   [self layoutUserButtons];
 }
 
@@ -554,7 +171,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   self.scrollView.delegate = self;
   self.scrollView.customDelegate = self;
   self.scrollView.delaysContentTouches = NO;
-  self.scrollView.multipleTouchEnabled = YES;
+  self.scrollView.multipleTouchEnabled = NO;
 //  self.scrollView.canCancelContentTouches = YES;
   [self.view addSubview:self.scrollView];
 }
@@ -562,8 +179,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)layoutKeysBasedOnKeyboardStyle {
     // nmsd means noModScaleDegree
   
-  _allSoundedKeys = [[NSMutableArray alloc] initWithCapacity:10];
-  _allKeysMutable = [[NSMutableSet alloc] initWithCapacity:10];
+  _allSoundedKeys = [[NSMutableSet alloc] initWithCapacity:5];
+  _allKeysMutable = [[NSMutableArray alloc] initWithCapacity:_totalKeysInKeyboard];
+//  _allKeyTouches = [[NSMutableSet alloc] initWithCapacity:10];
   
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
     [self layoutWhiteBlackKeyboardStyle];
@@ -571,7 +189,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     [self layoutGridKeyboardStyle];
   }
   
-  _allKeys = [NSSet setWithSet:_allKeysMutable];
+  _allKeys = [[NSArray alloc] initWithArray:_allKeysMutable];
 }
 
 -(CGFloat)findScrollViewMargin {
@@ -749,12 +367,17 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [roundedButtonsView addSubview:helpButton];
 }
 
-//-(void)layoutKeyboardOverlay {
-//  self.keyboardOverlay = [[KeyboardOverlay alloc] initWithFrame:CGRectMake(0, 0, self.scrollView.contentSize.width, _statusBarHeight + whiteKeyHeight)];
-//  self.keyboardOverlay.backgroundColor = [UIColor clearColor];
-//  self.keyboardOverlay.delegate = self;
-//  [self.scrollView addSubview:self.keyboardOverlay];
-//}
+-(void)ensureScrollViewHasCorrectContentOffset {
+  if (self.scrollView.contentOffset.x < 0.f) {
+    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
+      self.scrollView.contentOffset = CGPointMake(0, 0);
+    } completion:nil];
+  } else if (self.scrollView.contentOffset.x > (float)self.scrollView.contentSize.width - (float)self.scrollView.frame.size.width) {
+    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
+      self.scrollView.contentOffset = CGPointMake(self.scrollView.contentSize.width - self.scrollView.frame.size.width, 0);
+    } completion:nil];
+  }
+}
 
 #pragma mark - presenting other views methods
 
@@ -822,179 +445,257 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [super didReceiveMemoryWarning];
 }
 
-  // TODO: delete all this
+#pragma mark - key sounding methods
 
-
-
-
-
-
-
-
-
-#pragma mark - delegate methods for debugging
-//
--(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)pressKey:(Key *)key {
+    // ONLY call this method from Key instance
   
-  _event = event;
-  
-  NSLog(@"touches began, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
-  [self.scrollView gestureRecognizerShouldBegin:self.scrollView.panGestureRecognizer];
-//  if (_knownTouchEventAndKeyBeingSounded) {
-//    [_knownTouchEventAndKeyBeingSounded[@"key"] resignFirstResponder];
-//  }
+    // logic to sound key
+  float frequency = _lowestTone * pow(2.f, ((float)key.noModScaleDegree) / _tonesPerOctave);
+  audioData.myMandolin->setFrequency(frequency);
+  audioData.myMandolin->pluck(0.7f);
 }
-//
--(void)customScrollViewTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+
+-(void)liftKey:(Key *)key {
+    // ONLY call this method from Key instance
   
-  _event = event;
-  NSLog(@"touches moved, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
-//  if (_knownTouchEventAndKeyBeingSounded) {
-//    [_knownTouchEventAndKeyBeingSounded[@"key"] resignFirstResponder];
+    // logic to silence key will go here, depending on audio engine
+}
+
+# pragma mark - updating keys and touches helper methods
+
+//-(BOOL)thereIsATouchOverThisKey:(Key *)key {
+//  for (KeyTouch *thisTouch in [_event allTouches]) {
+//    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+//    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
+//    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
+//      Key *thisKey = (Key *)thisTouchHitTest;
+//      if (thisKey == key) {
+//        return YES;
+//      }
+//    }
 //  }
+//  return NO;
+//}
+
+-(void)updateTouches:(NSSet *)touches {
+    // ensures that touches have the right keys
+  for (KeyTouch *thisTouch in touches) {
+    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
+    
+    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
+      Key *thisKey = (Key *)thisTouchHitTest;
+      if (![thisKey.touches containsObject:thisTouch]) {
+        [thisKey addTouchToThisKey:thisTouch];
+        for (Key *otherKey in _allSoundedKeys) {
+          if (thisKey != otherKey && [otherKey.touches containsObject:thisTouch]) {
+            [otherKey.touches removeObject:thisTouch];
+          }
+        }
+      }
+    }
+  }
+  
+//  if ([touches count] == 0) {
+//    for (Key *key in _allKeys) {
+//      [key removeAllTouchesFromThisKey];
+//    }
+//  }
+  
+//  NSLog(@"There are this many touches in the event %i", [_event.allTouches count]);
+}
+
+//-(void)updateTouchesAtEnd:touches {
+//  if ([touches count] == 0) {
+//    for (Key *key in _allKeys) {
+////      [key removeAllTouchesFromThisKeyWithEvent:(UIEvent *)_event];
+//    }
+//  }
+//  NSLog(@"Touches at the end: %i", [touches count]);
+//  [self updateTouchesAtEnd];
+//}
+
+-(void)updateTouches {
+    // ensures that touches have the right keys
+  for (KeyTouch *thisTouch in _event.allTouches) {
+    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
+    
+    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
+      Key *thisKey = (Key *)thisTouchHitTest;
+      if (thisTouch != thisKey.mostRecentTouch) {
+        [thisKey addTouchToThisKey:thisTouch];
+      }
+    }
+  }
+  [self checkSoundedKeysAreTouchedAtEnd];
+}
+
+-(void)checkSoundedKeysAreTouchedAtEnd {
+  NSMutableSet *keysToRemove = [[NSMutableSet alloc] initWithCapacity:5];
+  for (Key *thisKey in _allSoundedKeys) {
+    BOOL removeTouchFromThisKey = YES; // the default
+    for (UITouch *thisTouch in [_event allTouches]) {
+      CGPoint touchLocation = [thisTouch locationInView:self.scrollView];
+      UIView *hitView = [self.scrollView hitTest:touchLocation withEvent:_event];
+      if (hitView == thisKey) {
+        removeTouchFromThisKey = NO; // the key is being touched
+        NSLog(@"the touch is %@, its view is %@", thisTouch.objectID, thisTouch.view.objectID);
+      }
+    }
+    if (removeTouchFromThisKey) {
+      [keysToRemove addObject:thisKey];
+    }
+  }
+  for (Key *thisKey in keysToRemove) {
+    [thisKey removeThisKey];
+  }
+}
+
+#pragma mark - key gesture recognizer delegate methods
+
+-(void)keyTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    // kludge workaround to ensure scrollView doesn't freeze out of bounds after user premature taps key
+  [self ensureScrollViewHasCorrectContentOffset];
+  _event = event;
+  
+  KeyTouch *thisTouch = [touches anyObject];
+  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+  UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:event];
+  
+  if ([thisTouchHitTest isKindOfClass:[Key class]]) {
+    Key *thisKey = (Key *)thisTouchHitTest;
+    [thisKey addTouchToThisKey:thisTouch];
+  }
+}
+
+-(void)keyTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  _event = event;
+  
+  KeyTouch *thisTouch = [touches anyObject];
+  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+  UIView *thisTouchHitView = [self.scrollView hitTest:thisTouchLocation withEvent:event];
+  CGPoint thisTouchPreviousLocation = [thisTouch previousLocationInView:self.scrollView];
+  UIView *thisTouchPreviousHitView = [self.scrollView hitTest:thisTouchPreviousLocation withEvent:event];
+  BOOL thisTouchIsOnAKeyNow = [thisTouchHitView isKindOfClass:[Key class]];
+  BOOL thisTouchWasOnAKeyBefore = [thisTouchPreviousHitView isKindOfClass:[Key class]];
+
+  if (thisTouchIsOnAKeyNow && thisTouchWasOnAKeyBefore) {
+    Key *thisKey = (Key *)thisTouchHitView;
+    Key *previousKey = (Key *)thisTouchPreviousHitView;
+    if (thisKey != previousKey) {
+      [thisKey addTouchToThisKey:thisTouch];
+      [previousKey removeTouchFromThisKey:thisTouch];
+    }
+  } else if (thisTouchIsOnAKeyNow && !thisTouchWasOnAKeyBefore) {
+    Key *thisKey = (Key *)thisTouchHitView;
+    [thisKey addTouchToThisKey:thisTouch];
+  } else if (!thisTouchIsOnAKeyNow && thisTouchWasOnAKeyBefore) {
+    Key *previousKey = (Key *)thisTouchPreviousHitView;
+    [previousKey removeTouchFromThisKey:thisTouch];
+  }
+}
+
+-(void)keyTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+  _event = event;
+  
+  KeyTouch *thisTouch = [touches anyObject];
+  CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+  UIView *thisTouchHitView = [self.scrollView hitTest:thisTouchLocation withEvent:event];
+  
+  if ([thisTouchHitView isKindOfClass:[Key class]]) {
+    Key *thisKey = (Key *)thisTouchHitView;
+    [thisKey removeTouchFromThisKey:thisTouch];
+  }
+  
+  [self checkSoundedKeysAreTouchedAtEnd];
+}
+
+-(void)keyTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+  NSLog(@"touches cancelled from key");
+  [self keyTouchesEnded:touches withEvent:event];
+}
+
+-(void)addKeyToKeysSounded:(Key *)key {
+  [_allSoundedKeys addObject:key];
+}
+
+-(void)removeKeyFromKeysSounded:(Key *)key {
+  [_allSoundedKeys removeObject:key];
+}
+
+-(UIScrollView *)tellKeyScrollview {
+  return self.scrollView;
+}
+
+#pragma mark - scrollview methods
+
+-(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+  _event = event;
+}
+
+-(void)customScrollViewTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  _event = event;
+  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-  
   _event = event;
-  NSLog(@"touches moved, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+    // ensures that keys will lift if touch went down on scrollView then dragged into key
+  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
 }
 
 -(void)customScrollViewTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  
   _event = event;
-  NSLog(@"custom scrollview touches cancelled");
-}
-
-
--(BOOL)thereIsATouchOverThisKey:(Key *)key {
-  for (UITouch *thisTouch in [_event allTouches]) {
-    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-    UIView *viewUnderThisTouch = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
-    if ([viewUnderThisTouch isKindOfClass:[Key class]]) {
-      NSLog(@"this is the viewUnderThisTouch %@", viewUnderThisTouch);
-      if (viewUnderThisTouch == key) {
-        NSLog(@"there is a touch over this key %i", key.noModScaleDegree);
-        return YES;
-      }
-    }
-  }
-  return NO;
-}
-//
-//-(void)updateAllSoundedKeys {
-//  NSLog(@"total keys in all Keys %i", [_allKeys count]);
-//  for (Key *key in self.scrollView.subviews) {
-//    if ([self thereIsATouchOverThisKey:key]) {
-//      if (![_allSoundedKeys containsObject:key]) {
-//        [self keyPressed:key];
-//        [_allSoundedKeys addObject:key];
-//      }
-//    } else {
-//      if ([_allSoundedKeys containsObject:key]) {
-//        [self keyLifted:key];
-//        [_allSoundedKeys removeObject:key];
-//      }
-//    }
-//  }
-
-
-//}
-
--(void)updateKeys {
-//  [self updateAllSoundedKeys];
-  NSMutableSet *dictionariesToRemove = [[NSMutableSet alloc] initWithCapacity:10];
-  
-  for (UITouch *thisTouch in [_event allTouches]) {
-    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
-    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-      Key *thisKey = (Key *)thisTouchHitTest;
-      
-        // get previous location from dictionary
-//      CGPoint thisTouchPreviousLocation = [thisTouch previousLocationInView:self.scrollView];
-//      UIView *thisTouchPreviousHitTest = [self.scrollView hitTest:thisTouchPreviousLocation withEvent:_event];
-      BOOL keyChangedUnderThisTouch = NO;
-      NSUInteger index;
-      for (NSDictionary *thisDictionary in _allSoundedKeys) {
-        if (thisDictionary[@"touch"] == thisTouch && thisDictionary[@"key"] == thisKey) {
-        } else if (thisDictionary[@"touch"] == thisTouch && thisDictionary[@"key"] != thisKey) {
-          index = [_allSoundedKeys indexOfObject:thisDictionary];
-          keyChangedUnderThisTouch = YES;
-        } else {
-          [dictionariesToRemove addObject:thisDictionary];
-        }
-      }
-      
-      if (keyChangedUnderThisTouch) {
-        [self keyLifted:_allSoundedKeys[index][@"key"] fromTouch:thisTouch];
-        [self keyPressed:thisKey fromTouch:thisTouch];
-      }
-      
-      for (NSDictionary *thisDictionary in dictionariesToRemove) {
-        [self keyLifted:thisDictionary[@"key"] fromTouch:thisDictionary[@"touch"]];
-      }
-    }
-  }
-  
-    // ensures there are never more sounds than touches
-  
-  
-    // ensures there are never more touches than sounds
-  
-  
-  NSLog(@"This is the event %@", _event);
-  NSLog(@"There are this many touches in the event %i", [[_event allTouches] count]);
-  NSLog(@"There are this many sounded keys %i", [_allSoundedKeys count]);
-  
-//      BOOL thereIsATouchOverThisKey = [self thereIsATouchOverThisKey:thisKey];
-//      if (thereIsATouchOverThisKey && ![_allSoundedKeys containsObject:thisKey]) {
-//        [self keyPressed:thisKey];
-//      }
-//      if (!thereIsATouchOverThisKey) {
-//        [self keyLifted:thisKey];
-//      }
-//    }
-//  }
+  [self updateTouches];
 }
 
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView {
-  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
-  [self updateKeys];
+    //  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
+  
+  [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-  NSLog(@"will begin dragging, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
-  [self updateKeys];
+    //  NSLog(@"will begin dragging, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
+  
+  [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
-  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
-  [self updateKeys];
-//  [self updateKeyUnderTouchAfterScroll];
+    //  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
+  
+  [self updateTouches];
 }
-//
+
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-  NSLog(@"scrollview did end dragging");
+    //  NSLog(@"scrollview did end dragging");
   
-  [self updateKeys];
+    // kludge way to ensure that all keys are lifted after dragging ended
+  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
 }
-//
+
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
-  NSLog(@"scrollview will end dragging");
+    //  NSLog(@"scrollview will end dragging");
   
-  [self updateKeys];
+  [self updateTouches];
 }
-//}
-//
+
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-  NSLog(@"scrollview did end decelerating");
+    //  NSLog(@"scrollview did end decelerating");
   
-  [self updateKeys];
+    // kludge way to ensure that all keys are lifted after decelerating ended
+  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
 }
-//
-//-(void)scrollViewDidScrollToTop:(UIScrollView *)scrollView {
-//  NSLog(@"scrollview did scroll to top");
-//}
+
+-(void)kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling {
+    // kludge way to ensure that all keys are lifted after decelerating or dragging ended
+    // for some reason, key doesn't know that its touch has ended after scrolling
+  NSSet *keysToRemove = [NSMutableSet setWithSet:_allSoundedKeys];
+  for (Key *key in keysToRemove) {
+    [key removeThisKey];
+  }
+}
 
 @end
