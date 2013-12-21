@@ -18,9 +18,9 @@
 
 @protocol KeyGestureRecognizerDelegate <NSObject>
 
--(void)keyTouchesBegan:(NSSet *)keyTouches withEvent:(UIEvent *)event;
--(void)keyTouchesMoved:(NSSet *)keyTouches withEvent:(UIEvent *)event;
--(void)keyTouchesEnded:(NSSet *)keyTouches withEvent:(UIEvent *)event;
--(void)keyTouchesCancelled:(NSSet *)keyTouches withEvent:(UIEvent *)event;
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event;
 
 @end

@@ -168,7 +168,6 @@
 		3FAA7221185848880041268E /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA721F185848880041268E /* SettingsViewController.m */; };
 		3FAA7222185848880041268E /* SettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7220185848880041268E /* SettingsViewController.xib */; };
 		3FB3EF9F1864199E00D008E7 /* KeyGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */; };
-		3FB3EFA218642B4C00D008E7 /* KeyTouch.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FB3EFA118642B4C00D008E7 /* KeyTouch.m */; };
 		3FFFE2391863BB2100C28478 /* NSObject+ObjectID.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */; };
 /* End PBXBuildFile section */
 
@@ -457,8 +456,6 @@
 		3FAA7220185848880041268E /* SettingsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingsViewController.xib; sourceTree = "<group>"; };
 		3FB3EF9D1864199E00D008E7 /* KeyGestureRecognizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyGestureRecognizer.h; sourceTree = "<group>"; };
 		3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyGestureRecognizer.m; sourceTree = "<group>"; };
-		3FB3EFA018642B4C00D008E7 /* KeyTouch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyTouch.h; sourceTree = "<group>"; };
-		3FB3EFA118642B4C00D008E7 /* KeyTouch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyTouch.m; sourceTree = "<group>"; };
 		3FFFE2371863BB2100C28478 /* NSObject+ObjectID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+ObjectID.h"; sourceTree = "<group>"; };
 		3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+ObjectID.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -526,31 +523,10 @@
 			children = (
 				3F94139E18556EA40067CFBF /* AppDelegate.h */,
 				3F94139F18556EA40067CFBF /* AppDelegate.mm */,
-				3FAA70991858413A0041268E /* KeyboardViewController.h */,
-				3FAA709A1858413A0041268E /* KeyboardViewController.mm */,
-				3FAA709B1858413A0041268E /* KeyboardViewController.xib */,
-				3FAA721E185848880041268E /* SettingsViewController.h */,
-				3FAA721F185848880041268E /* SettingsViewController.m */,
-				3FAA7220185848880041268E /* SettingsViewController.xib */,
-				3FAA7219185846290041268E /* HelpViewController.h */,
-				3FAA721A185846290041268E /* HelpViewController.m */,
-				3FAA721B185846290041268E /* HelpViewController.xib */,
-				3F67660918611A32005132E5 /* CustomScrollView.h */,
-				3F67660A18611A32005132E5 /* CustomScrollView.m */,
-				3F7E3625185ABB4E00335286 /* Key.h */,
-				3F7E3626185ABB4E00335286 /* Key.m */,
-				3FB3EF9D1864199E00D008E7 /* KeyGestureRecognizer.h */,
-				3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */,
-				3FB3EFA018642B4C00D008E7 /* KeyTouch.h */,
-				3FB3EFA118642B4C00D008E7 /* KeyTouch.m */,
-				3F15D95A18602609002377B5 /* KeyboardLogic.h */,
-				3F15D95B18602609002377B5 /* KeyboardLogic.m */,
-				3F7551B3185DAD8E0059350E /* UIColor+ColourWheel.h */,
-				3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */,
-				3FFFE2371863BB2100C28478 /* NSObject+ObjectID.h */,
-				3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */,
-				3F5A589118599EFB00E62735 /* DataModel.h */,
-				3F5A589218599EFB00E62735 /* DataModel.m */,
+				3FB3EFA5186579DF00D008E7 /* Controllers */,
+				3FB3EFA4186579C600D008E7 /* Views */,
+				3FB3EFA3186579B500D008E7 /* Models */,
+				3FB3EFA618657A0800D008E7 /* Helpers */,
 				3F9413AA18556EA40067CFBF /* Images.xcassets */,
 				3F94139618556EA40067CFBF /* Supporting Files */,
 			);
@@ -852,6 +828,57 @@
 			path = src;
 			sourceTree = "<group>";
 		};
+		3FB3EFA3186579B500D008E7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3F5A589118599EFB00E62735 /* DataModel.h */,
+				3F5A589218599EFB00E62735 /* DataModel.m */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		3FB3EFA4186579C600D008E7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3F67660918611A32005132E5 /* CustomScrollView.h */,
+				3F67660A18611A32005132E5 /* CustomScrollView.m */,
+				3F7E3625185ABB4E00335286 /* Key.h */,
+				3F7E3626185ABB4E00335286 /* Key.m */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		3FB3EFA5186579DF00D008E7 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				3FAA70991858413A0041268E /* KeyboardViewController.h */,
+				3FAA709A1858413A0041268E /* KeyboardViewController.mm */,
+				3FAA709B1858413A0041268E /* KeyboardViewController.xib */,
+				3FAA721E185848880041268E /* SettingsViewController.h */,
+				3FAA721F185848880041268E /* SettingsViewController.m */,
+				3FAA7220185848880041268E /* SettingsViewController.xib */,
+				3FAA7219185846290041268E /* HelpViewController.h */,
+				3FAA721A185846290041268E /* HelpViewController.m */,
+				3FAA721B185846290041268E /* HelpViewController.xib */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
+		3FB3EFA618657A0800D008E7 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				3FB3EF9D1864199E00D008E7 /* KeyGestureRecognizer.h */,
+				3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */,
+				3F15D95A18602609002377B5 /* KeyboardLogic.h */,
+				3F15D95B18602609002377B5 /* KeyboardLogic.m */,
+				3F7551B3185DAD8E0059350E /* UIColor+ColourWheel.h */,
+				3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */,
+				3FFFE2371863BB2100C28478 /* NSObject+ObjectID.h */,
+				3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */,
+			);
+			name = Helpers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1076,7 +1103,6 @@
 				3FAA71E8185841EC0041268E /* Mutex.cpp in Sources */,
 				3FAA71D9185841EC0041268E /* Granulate.cpp in Sources */,
 				3FAA71BB185841EC0041268E /* ADSR.cpp in Sources */,
-				3FB3EFA218642B4C00D008E7 /* KeyTouch.m in Sources */,
 				3FAA7203185841EC0041268E /* TapDelay.cpp in Sources */,
 				3FAA71DF185841EC0041268E /* LentPitShift.cpp in Sources */,
 				3FAA71E5185841EC0041268E /* ModalBar.cpp in Sources */,

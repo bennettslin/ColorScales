@@ -8,7 +8,6 @@
 
 #import "KeyGestureRecognizer.h"
 #import "NSObject+ObjectID.h"
-#import "KeyTouch.h"
 
 @implementation KeyGestureRecognizer
 
@@ -21,36 +20,19 @@
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-  NSLog(@"gesture recognizer %@ sent touches began", self.objectID);
-  NSSet *keyTouches = [self customiseTouchesIntoKeyTouches:touches];
-  [self.delegate keyTouchesBegan:keyTouches withEvent:event];
+  [self.delegate touchesBegan:touches withEvent:event];
 }
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-  NSLog(@"gesture recognizer %@ sent touches moved", self.objectID);
-  NSSet *keyTouches = [self customiseTouchesIntoKeyTouches:touches];
-  [self.delegate keyTouchesMoved:keyTouches withEvent:event];
+  [self.delegate touchesMoved:touches withEvent:event];
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-  NSLog(@"gesture recognizer %@ sent touches ended", self.objectID);
-  NSSet *keyTouches = [self customiseTouchesIntoKeyTouches:touches];
-  [self.delegate keyTouchesEnded:keyTouches withEvent:event];
+  [self.delegate touchesEnded:touches withEvent:event];
 }
 
 -(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  NSLog(@"gesture recognizer %@ sent touches cancelled", self.objectID);
-  NSSet *keyTouches = [self customiseTouchesIntoKeyTouches:touches];
-  [self.delegate keyTouchesCancelled:keyTouches withEvent:event];
-}
-
--(NSSet *)customiseTouchesIntoKeyTouches:(NSSet *)touches; {
-  NSMutableSet *keyTouches = [[NSMutableSet alloc] initWithCapacity:1];
-  for (UITouch *touch in touches) {
-    KeyTouch *keyTouch = (KeyTouch *)touch;
-    [keyTouches addObject:(KeyTouch *)keyTouch];
-  }
-  return [NSSet setWithSet:keyTouches];
+  [self.delegate touchesCancelled:touches withEvent:event];
 }
 
 @end

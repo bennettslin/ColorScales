@@ -14,7 +14,6 @@
 #import "KeyboardLogic.h"
 #import "CustomScrollView.h"
 #import "NSObject+ObjectID.h"
-#import "KeyTouch.h"
 
 #define SRATE 44100
 #define FRAMESIZE 128
@@ -73,9 +72,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
   UIEvent *_event; // this is only for the scrollview to know the event
   NSMutableSet *_allSoundedKeys; // added and removed in keyPressed and keyLifted methods only
-  NSMutableArray *_allKeysMutable;
-  NSArray *_allKeys;
-//  NSMutableSet *_allKeyTouches;
 }
 
 #pragma mark - view methods
@@ -113,9 +109,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   MoAudio::init(SRATE, FRAMESIZE, NUMCHANNELS);
     // start the audio layer, registering a callback method
   MoAudio::start(audioCallback, &audioData);
-  
-//  NSLog(@"Documents folder is %@", [self documentsDirectory]);
-//  NSLog(@"Data file path is %@", [self dataFilePath]);
 }
 
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel {
@@ -172,30 +165,23 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   self.scrollView.customDelegate = self;
   self.scrollView.delaysContentTouches = NO;
   self.scrollView.multipleTouchEnabled = NO;
-//  self.scrollView.canCancelContentTouches = YES;
   [self.view addSubview:self.scrollView];
 }
 
 -(void)layoutKeysBasedOnKeyboardStyle {
     // nmsd means noModScaleDegree
-  
   _allSoundedKeys = [[NSMutableSet alloc] initWithCapacity:5];
-  _allKeysMutable = [[NSMutableArray alloc] initWithCapacity:_totalKeysInKeyboard];
-//  _allKeyTouches = [[NSMutableSet alloc] initWithCapacity:10];
   
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
     [self layoutWhiteBlackKeyboardStyle];
   } else if ([_keyboardStyle isEqualToString:@"grid"]) {
     [self layoutGridKeyboardStyle];
   }
-  
-  _allKeys = [[NSArray alloc] initWithArray:_allKeysMutable];
 }
 
 -(CGFloat)findScrollViewMargin {
   CGFloat scrollViewWidth = self.scrollView.contentSize.width;
   CGFloat viewWidth = self.view.frame.size.width;
-//  NSLog(@"scrollview width is %f, view width is %f", scrollViewWidth, viewWidth);
   if (viewWidth > scrollViewWidth) {
     return (viewWidth - scrollViewWidth) / 2;
   }
@@ -276,13 +262,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
       
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       CGRect frame;
-//      if (thisRow == _numberOfGridRows - 1) { // the last row
-//      frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
-//                                 0, gridKeyWidth, gridKeyHeight + _statusBarHeight);
-//      } else {
-        frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
+      frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
                                   _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), gridKeyWidth, gridKeyHeight);
-//      }
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -299,12 +280,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)finalizeThisKey:(Key *)thisKey withThisNoModScaleDegree:(NSUInteger)nmsd {
   thisKey.backgroundColor = thisKey.normalColour;
   thisKey.noModScaleDegree = nmsd;
-//  [thisKey addTarget:self action:@selector(keyPressed:) forControlEvents:UIControlEventTouchDown];
-//  [thisKey addTarget:self action:@selector(keyLifted:) forControlEvents:UIControlEventTouchUpInside];
-  
   thisKey.delegate = self;
-  
-  [_allKeysMutable addObject:thisKey];
   [self.scrollView addSubview:thisKey];
 }
 
@@ -464,23 +440,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 # pragma mark - updating keys and touches helper methods
 
-//-(BOOL)thereIsATouchOverThisKey:(Key *)key {
-//  for (KeyTouch *thisTouch in [_event allTouches]) {
-//    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-//    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
-//    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-//      Key *thisKey = (Key *)thisTouchHitTest;
-//      if (thisKey == key) {
-//        return YES;
-//      }
-//    }
-//  }
-//  return NO;
-//}
-
 -(void)updateTouches:(NSSet *)touches {
     // ensures that touches have the right keys
-  for (KeyTouch *thisTouch in touches) {
+  for (UITouch *thisTouch in touches) {
     CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
     UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
     
@@ -496,29 +458,11 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
       }
     }
   }
-  
-//  if ([touches count] == 0) {
-//    for (Key *key in _allKeys) {
-//      [key removeAllTouchesFromThisKey];
-//    }
-//  }
-  
-//  NSLog(@"There are this many touches in the event %i", [_event.allTouches count]);
 }
 
-//-(void)updateTouchesAtEnd:touches {
-//  if ([touches count] == 0) {
-//    for (Key *key in _allKeys) {
-////      [key removeAllTouchesFromThisKeyWithEvent:(UIEvent *)_event];
-//    }
-//  }
-//  NSLog(@"Touches at the end: %i", [touches count]);
-//  [self updateTouchesAtEnd];
-//}
-
 -(void)updateTouches {
-    // ensures that touches have the right keys
-  for (KeyTouch *thisTouch in _event.allTouches) {
+    // ensures that all touches have the right keys when called after a touch delegate method
+  for (UITouch *thisTouch in _event.allTouches) {
     CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
     UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
     
@@ -533,6 +477,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)checkSoundedKeysAreTouchedAtEnd {
+    // ensures that all touches are flushed at the end of dragging, decelerating, and scrollView's touchesEnded,
+    // because the key's touchesEnded method doesn't always get called
   NSMutableSet *keysToRemove = [[NSMutableSet alloc] initWithCapacity:5];
   for (Key *thisKey in _allSoundedKeys) {
     BOOL removeTouchFromThisKey = YES; // the default
@@ -541,7 +487,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
       UIView *hitView = [self.scrollView hitTest:touchLocation withEvent:_event];
       if (hitView == thisKey) {
         removeTouchFromThisKey = NO; // the key is being touched
-        NSLog(@"the touch is %@, its view is %@", thisTouch.objectID, thisTouch.view.objectID);
       }
     }
     if (removeTouchFromThisKey) {
@@ -560,7 +505,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [self ensureScrollViewHasCorrectContentOffset];
   _event = event;
   
-  KeyTouch *thisTouch = [touches anyObject];
+  UITouch *thisTouch = [touches anyObject];
   CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
   UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:event];
   
@@ -573,7 +518,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)keyTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
   
-  KeyTouch *thisTouch = [touches anyObject];
+  UITouch *thisTouch = [touches anyObject];
   CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
   UIView *thisTouchHitView = [self.scrollView hitTest:thisTouchLocation withEvent:event];
   CGPoint thisTouchPreviousLocation = [thisTouch previousLocationInView:self.scrollView];
@@ -600,7 +545,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)keyTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
   
-  KeyTouch *thisTouch = [touches anyObject];
+  UITouch *thisTouch = [touches anyObject];
   CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
   UIView *thisTouchHitView = [self.scrollView hitTest:thisTouchLocation withEvent:event];
   
@@ -652,39 +597,27 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    //  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
-  
   [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    //  NSLog(@"will begin dragging, scrollview gestureRecognizer state %i", self.scrollView.panGestureRecognizer.state);
-  
   [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
-    //  NSLog(@"scrollview contentOffset %f", self.scrollView.contentOffset.x);
-  
   [self updateTouches];
 }
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    //  NSLog(@"scrollview did end dragging");
-  
     // kludge way to ensure that all keys are lifted after dragging ended
   [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
 }
 
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
-    //  NSLog(@"scrollview will end dragging");
-  
   [self updateTouches];
 }
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    //  NSLog(@"scrollview did end decelerating");
-  
     // kludge way to ensure that all keys are lifted after decelerating ended
   [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
 }

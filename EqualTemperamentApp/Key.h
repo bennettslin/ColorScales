@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-@class KeyTouch;
 
 @protocol KeyDelegate;
 
@@ -17,7 +16,7 @@
 @property (strong, nonatomic) UIColor *highlightedColour;
 @property (strong, nonatomic) UILabel *characterLabel;
 @property NSUInteger noModScaleDegree;
-@property (strong, nonatomic) KeyTouch *mostRecentTouch;
+@property (strong, nonatomic) UITouch *mostRecentTouch;
 @property BOOL isTouched;
 
 @property NSUInteger touchedThisManyTimes;
@@ -40,8 +39,6 @@
 @end
 
 @protocol KeyDelegate <NSObject>
-
-//-(void)keyTapped:(Key *)sender;
 
 -(void)keyTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
 -(void)keyTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;

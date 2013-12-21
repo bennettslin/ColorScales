@@ -189,7 +189,6 @@
     // find scale degree that results in first ratio greater than 1.5
   while (tempRatio < 1.5f) {
     tempRatio *= semitoneInterval;
-      //    NSLog(@"%f", tempRatio);
     scaleDegree += 1;
   }
     // compare the two ratio to see which is closer to 1.5

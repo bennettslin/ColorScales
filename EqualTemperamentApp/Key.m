@@ -10,7 +10,6 @@
 #import "UIColor+ColourWheel.h"
 #import "NSObject+ObjectID.h"
 #import "KeyGestureRecognizer.h"
-#import "KeyTouch.h"
 
 const NSUInteger coloursInPicker = 24;
 
@@ -229,17 +228,17 @@ const NSUInteger coloursInPicker = 24;
 
 #pragma mark - touch methods
 
--(void)addTouchToThisKey:(KeyTouch *)keyTouch {
-  if (self.mostRecentTouch != keyTouch) {
+-(void)addTouchToThisKey:(UITouch *)touch {
+  if (self.mostRecentTouch != touch) {
     [self.delegate pressKey:self];
     self.backgroundColor = self.highlightedColour;
   }
-  self.mostRecentTouch = keyTouch;
+  self.mostRecentTouch = touch;
   [self.delegate addKeyToKeysSounded:self];
 }
 
--(void)removeTouchFromThisKey:(KeyTouch *)keyTouch {
-  if (self.mostRecentTouch == keyTouch) {
+-(void)removeTouchFromThisKey:(UITouch *)touch {
+  if (self.mostRecentTouch == touch) {
     [self.delegate liftKey:self];
     self.backgroundColor = self.normalColour;
     self.mostRecentTouch = nil;
@@ -257,24 +256,20 @@ const NSUInteger coloursInPicker = 24;
 
 #pragma mark - gesture recognizer delegate methods
 
--(void)keyTouchesBegan:(NSSet *)keyTouches withEvent:(UIEvent *)event {
-//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
-  [self.delegate keyTouchesBegan:keyTouches withEvent:event];
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate keyTouchesBegan:touches withEvent:event];
 }
 
--(void)keyTouchesMoved:(NSSet *)keyTouches withEvent:(UIEvent *)event {
-//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
-  [self.delegate keyTouchesMoved:keyTouches withEvent:event];
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate keyTouchesMoved:touches withEvent:event];
 }
 
--(void)keyTouchesEnded:(NSSet *)keyTouches withEvent:(UIEvent *)event {
-//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
-  [self.delegate keyTouchesEnded:keyTouches withEvent:event];
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate keyTouchesEnded:touches withEvent:event];
 }
 
--(void)keyTouchesCancelled:(NSSet *)keyTouches withEvent:(UIEvent *)event {
-//  NSSet *finalisedKeyTouches = [self setKeyPropertyOfKeyTouches:keyTouches];
-  [self.delegate keyTouchesCancelled:keyTouches withEvent:event];
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self.delegate keyTouchesCancelled:touches withEvent:event];
 }
 
 @end
