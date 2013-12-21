@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol KeyGestureRecognizerDelegate ;
+@protocol KeyGestureRecognizerDelegate;
 
 @interface KeyGestureRecognizer : UITapGestureRecognizer
 

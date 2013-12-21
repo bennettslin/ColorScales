@@ -11,6 +11,8 @@
 
 @implementation KeyGestureRecognizer
 
+  // gesture recogniser doesn't need to be added to view!
+  // just have view declare its delegate!
 -(id)init {
   self = [super init];
   if (self) {

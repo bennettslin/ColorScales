@@ -32,16 +32,9 @@ const NSUInteger coloursInPicker = 24;
                                    andScaleDegree:(NSNumber *)scaleDegreeObject {
   self = [super initWithFrame:frame];
   if (self) {
-    
     self.layer.drawsAsynchronously = YES;
-    
-    self.multipleTouchEnabled = YES;
-    KeyGestureRecognizer *keyGestureRecognizer = [[KeyGestureRecognizer alloc] init];
-    keyGestureRecognizer.delegate = self;
-    [self addGestureRecognizer:keyGestureRecognizer];
-  
-    self.touchedThisManyTimes = 0;
-    
+    self.multipleTouchEnabled = NO;
+      
     NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
     [self findColoursWithColourStyle:colourStyle
           andRootColourWheelPosition:[rootColourWheelPosition unsignedIntegerValue]

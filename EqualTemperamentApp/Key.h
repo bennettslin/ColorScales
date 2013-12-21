@@ -17,10 +17,6 @@
 @property (strong, nonatomic) UILabel *characterLabel;
 @property NSUInteger noModScaleDegree;
 @property (strong, nonatomic) UITouch *mostRecentTouch;
-@property BOOL isTouched;
-
-@property NSUInteger touchedThisManyTimes;
-@property (strong, nonatomic) NSMutableSet *touches;
 
 @property (weak, nonatomic) id<KeyDelegate> delegate;
 

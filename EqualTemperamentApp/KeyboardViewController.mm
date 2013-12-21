@@ -344,14 +344,16 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)ensureScrollViewHasCorrectContentOffset {
-  if (self.scrollView.contentOffset.x < 0.f) {
-    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
-      self.scrollView.contentOffset = CGPointMake(0, 0);
-    } completion:nil];
-  } else if (self.scrollView.contentOffset.x > (float)self.scrollView.contentSize.width - (float)self.scrollView.frame.size.width) {
-    [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
-      self.scrollView.contentOffset = CGPointMake(self.scrollView.contentSize.width - self.scrollView.frame.size.width, 0);
-    } completion:nil];
+  if (self.scrollView.contentSize.width > self.scrollView.frame.size.width) {
+    if (self.scrollView.contentOffset.x < 0.f) {
+      [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
+        self.scrollView.contentOffset = CGPointMake(0, 0);
+      } completion:nil];
+    } else if (self.scrollView.contentOffset.x > (float)self.scrollView.contentSize.width - (float)self.scrollView.frame.size.width) {
+      [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
+        self.scrollView.contentOffset = CGPointMake(self.scrollView.contentSize.width - self.scrollView.frame.size.width, 0);
+      } completion:nil];
+    }
   }
 }
 
@@ -440,36 +442,21 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 # pragma mark - updating keys and touches helper methods
 
--(void)updateTouches:(NSSet *)touches {
-    // ensures that touches have the right keys
-  for (UITouch *thisTouch in touches) {
-    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
-    
-    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-      Key *thisKey = (Key *)thisTouchHitTest;
-      if (![thisKey.touches containsObject:thisTouch]) {
-        [thisKey addTouchToThisKey:thisTouch];
-        for (Key *otherKey in _allSoundedKeys) {
-          if (thisKey != otherKey && [otherKey.touches containsObject:thisTouch]) {
-            [otherKey.touches removeObject:thisTouch];
-          }
-        }
-      }
-    }
-  }
-}
-
 -(void)updateTouches {
     // ensures that all touches have the right keys when called after a touch delegate method
   for (UITouch *thisTouch in _event.allTouches) {
-    CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
-    UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
-    
-    if ([thisTouchHitTest isKindOfClass:[Key class]]) {
-      Key *thisKey = (Key *)thisTouchHitTest;
-      if (thisTouch != thisKey.mostRecentTouch) {
-        [thisKey addTouchToThisKey:thisTouch];
+      // this ensures that keys aren't added for touches that have ended!
+      // this was the fix I couldn't figure out for a long, long while...
+      // ensures the touch started in key and not scrollview
+      if ((thisTouch.phase < 3 && [thisTouch.view isKindOfClass:[Key class]])) {
+      CGPoint thisTouchLocation = [thisTouch locationInView:self.scrollView];
+      UIView *thisTouchHitTest = [self.scrollView hitTest:thisTouchLocation withEvent:_event];
+      
+      if ([thisTouchHitTest isKindOfClass:[Key class]]) {
+        Key *thisKey = (Key *)thisTouchHitTest;
+        if (thisTouch != thisKey.mostRecentTouch && thisTouch) {
+          [thisKey addTouchToThisKey:thisTouch];
+        }
       }
     }
   }
@@ -558,7 +545,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)keyTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  NSLog(@"touches cancelled from key");
   [self keyTouchesEnded:touches withEvent:event];
 }
 
@@ -578,22 +564,24 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
+//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
-  [self updateTouches];
+//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
     // ensures that keys will lift if touch went down on scrollView then dragged into key
-  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
+//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
+//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
   _event = event;
-  [self updateTouches];
+//  [self updateTouches];
 }
 
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView {
@@ -601,7 +589,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-  [self updateTouches];
+//  [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
@@ -610,7 +598,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     // kludge way to ensure that all keys are lifted after dragging ended
-  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
+//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
+  [self updateTouches];
 }
 
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
@@ -619,16 +608,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     // kludge way to ensure that all keys are lifted after decelerating ended
-  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
-}
-
--(void)kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling {
-    // kludge way to ensure that all keys are lifted after decelerating or dragging ended
-    // for some reason, key doesn't know that its touch has ended after scrolling
-  NSSet *keysToRemove = [NSMutableSet setWithSet:_allSoundedKeys];
-  for (Key *key in keysToRemove) {
-    [key removeThisKey];
-  }
+//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
+  [self updateTouches];
 }
 
 @end
