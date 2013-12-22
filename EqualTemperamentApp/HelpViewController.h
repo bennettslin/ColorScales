@@ -10,6 +10,8 @@
 
 @interface HelpViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
+
 -(IBAction)closeButtonTapped:(id)sender;
 
 @end

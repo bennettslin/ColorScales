@@ -19,17 +19,6 @@
 #define FRAMESIZE 128
 #define NUMCHANNELS 2
 
-  // fine-tune these as necessary
-const CGFloat marginSide = 1.f;
-const CGFloat marginBetweenKeys = 1.f;
-const CGFloat whiteKeyHeight = 240.f;
-const CGFloat whiteBlackWhiteKeyWidth = 60.f;
-const CGFloat justWhiteKeyWidth = 48.f;
-const CGFloat gridKeyWidth = 54.f;
-
-const CGFloat buttonSize = 44.f;
-const CGFloat marginBetweenButtons = 5.f;
-
 void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   AudioData *data = (AudioData *)userData;
   for(int i=0; i<framesize; i++) {
@@ -47,6 +36,15 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 @end
 
 @implementation KeyboardViewController {
+  
+    // view constants, differ between iPhone and iPad;
+  CGFloat _marginSide;
+  CGFloat _marginBetweenKeys;
+  CGFloat _whiteKeyHeight;
+  CGFloat _whiteBlackWhiteKeyWidth;
+  CGFloat _gridKeyWidth;
+  CGFloat _buttonSize;
+  CGFloat _marginBetweenButtons;
     // view variables
   CGFloat _statusBarHeight;
   CGFloat _scrollViewMargin;
@@ -54,6 +52,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   NSUInteger _numberOfGridRows; // set this in viewDidLoad, as it's dependent on iPad or iPhone
   CGFloat _totalKeysPerGridRow;
   UIColor *_backgroundColour;
+  
+  CGFloat _screenWidth;
+  CGFloat _screenHeight;
   
     // musical variables
   NSUInteger _numberOfOctaves;
@@ -77,10 +78,32 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 #pragma mark - view methods
 
 -(void)viewDidLoad {
+  [super viewDidLoad];
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _marginSide = 1.f;
+    _marginBetweenKeys = 1.f;
+    _whiteKeyHeight = 240.f;
+    _whiteBlackWhiteKeyWidth = 60.f;
+    _gridKeyWidth = 54.f;
+    _buttonSize = 44.f;
+    _marginBetweenButtons = 5.f;
+  } else { // iPad
+    _marginSide = 1.f;
+    _marginBetweenKeys = 1.f;
+    _whiteKeyHeight = 600.f; // change based on real piano keys
+    _whiteBlackWhiteKeyWidth = 120.f;
+    _gridKeyWidth = 108.f;
+    _buttonSize = 88.f;
+    _marginBetweenButtons = 10.f;
+  }
+  
+  _screenWidth = [UIScreen mainScreen].bounds.size.height;
+  _screenHeight = [UIScreen mainScreen].bounds.size.width;
+  
     // for landscape statusBarHeight is width?! Whatever...
   _statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
   _backgroundColour = [UIColor colorWithRed:0.3f green:0.3f blue:0.25f alpha:1.f];
-  [super viewDidLoad];
   
     // Bennett-tweaked constants
   _numberOfOctaves = 3;
@@ -134,16 +157,14 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)placeScrollView {
   self.scrollView = [[CustomScrollView alloc] init];
   self.scrollView.frame = CGRectMake(0, 0,
-                                     self.view.bounds.size.width, self.view.bounds.size.height);
+                                     _screenWidth, _screenHeight);
   self.scrollView.backgroundColor = _backgroundColour;
   self.scrollView.showsHorizontalScrollIndicator = NO;
   CGFloat keyWidth = 0;
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
-    keyWidth = whiteBlackWhiteKeyWidth;
-  } else if ([_keyboardStyle isEqualToString:@"justWhite"]) {
-    keyWidth = justWhiteKeyWidth;
+    keyWidth = _whiteBlackWhiteKeyWidth;
   } else if ([_keyboardStyle isEqualToString:@"grid"]) {
-    keyWidth = gridKeyWidth;
+    keyWidth = _gridKeyWidth;
   }
   
   NSUInteger numberOfKeysMultiplier = 0;
@@ -151,14 +172,12 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
     // all whiteBlack keyboard layouts have seven white notes per octave
     numberOfKeysMultiplier = (7 * _numberOfOctaves) + 1;
-  } else if ([_keyboardStyle isEqualToString:@"justWhite"]) {
-    numberOfKeysMultiplier = _totalKeysInKeyboard;
   } else if ([_keyboardStyle isEqualToString:@"grid"]) {
     _totalKeysPerGridRow = _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - 1));
     numberOfKeysMultiplier = _totalKeysPerGridRow;
   }
   
-  self.scrollView.contentSize = CGSizeMake((marginSide * 2) + (keyWidth * numberOfKeysMultiplier),
+  self.scrollView.contentSize = CGSizeMake((_marginSide * 2) + (keyWidth * numberOfKeysMultiplier),
                                            self.scrollView.bounds.size.height);
   _scrollViewMargin = [self findScrollViewMargin];
   self.scrollView.delegate = self;
@@ -194,8 +213,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
     NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
     if ([KeyboardLogic isWhiteKeyGivenScaleDegree:scaleDegree andTonesPerOctave:_tonesPerOctave]) {
-      CGRect frame = CGRectMake(_scrollViewMargin + marginSide + (whiteKeyCount * whiteBlackWhiteKeyWidth),
-                                0, whiteBlackWhiteKeyWidth, whiteKeyHeight + _statusBarHeight);
+      CGRect frame = CGRectMake(_scrollViewMargin + _marginSide + (whiteKeyCount * _whiteBlackWhiteKeyWidth),
+                                0, _whiteBlackWhiteKeyWidth, _whiteKeyHeight + _statusBarHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -213,27 +232,27 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   NSArray *initialExtraMultipliers = [KeyboardLogic figureOutInitialExtraMultipliersGivenTonesPerOctave:_tonesPerOctave];
   
     // now add however many rows of black keys
-  CGFloat blackKeyWidth = whiteBlackWhiteKeyWidth * 3/4;
+  CGFloat blackKeyWidth = _whiteBlackWhiteKeyWidth * 3/4;
   CGFloat blackKeyOffsetMultiplier;
   for (NSArray *thisBlackKeyRow in theBlackKeys) {
     NSInteger blackKeyIndexRow = [theBlackKeys indexOfObject:thisBlackKeyRow];
     CGFloat blackKeyType = [KeyboardLogic getBlackKeyTypeGivenIndexRow:blackKeyIndexRow andTonesPerOctave:_tonesPerOctave];
     CGFloat blackKeyHeightMultiplier = [KeyboardLogic getBlackKeyHeightMultiplierGivenBlackKeyType:blackKeyType];
-    CGFloat blackKeyHeight = blackKeyHeightMultiplier * whiteKeyHeight;
+    CGFloat blackKeyHeight = blackKeyHeightMultiplier * _whiteKeyHeight;
     
     if (blackKeyType == 11/18.f + 0.00001f) {
       blackKeyOffsetMultiplier = 1/2.f;
     } else {
       blackKeyOffsetMultiplier = blackKeyType;
     }
-    CGFloat blackKeyOffset = blackKeyOffsetMultiplier * whiteBlackWhiteKeyWidth + 1.f;
+    CGFloat blackKeyOffset = blackKeyOffsetMultiplier * _whiteBlackWhiteKeyWidth + 1.f;
     CGFloat initialExtraMultiplier = [initialExtraMultipliers[blackKeyIndexRow] floatValue];
     NSInteger blackKeyCount = 0;
     CGFloat blackKeyGapSpace = 0;
     for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       if ([thisBlackKeyRow containsObject:scaleDegree]) {
-        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * whiteBlackWhiteKeyWidth) + marginSide + ((whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset + (blackKeyCount * whiteBlackWhiteKeyWidth) + blackKeyGapSpace, 0, blackKeyWidth, blackKeyHeight + _statusBarHeight);
+        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * _whiteBlackWhiteKeyWidth) + _marginSide + ((_whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset + (blackKeyCount * _whiteBlackWhiteKeyWidth) + blackKeyGapSpace, 0, blackKeyWidth, blackKeyHeight + _statusBarHeight);
         Key *thisKey = [[Key alloc] initWithFrame:frame
                                  givenColourStyle:_colourStyle
                        andRootColourWheelPosition:_rootColourWheelPosition
@@ -247,7 +266,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
           // calculates the added gap space for the next black key
         CGFloat multiplier = [KeyboardLogic getGapSizeGivenScaleDegree:scaleDegree andTonesPerOctave:_tonesPerOctave];
         if (multiplier != 0.f) {
-          blackKeyGapSpace += multiplier * whiteBlackWhiteKeyWidth;
+          blackKeyGapSpace += multiplier * _whiteBlackWhiteKeyWidth;
         }
       }
     }
@@ -256,14 +275,14 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)layoutGridKeyboardStyle {
     // may need to tweak this to get right
-  CGFloat gridKeyHeight = whiteKeyHeight / _numberOfGridRows;
+  CGFloat gridKeyHeight = _whiteKeyHeight / _numberOfGridRows;
   for (int thisRow = 0; thisRow < _numberOfGridRows; thisRow++) {
     for (NSInteger nmsd = thisRow * _gridInterval; nmsd < _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - (thisRow + 1))); nmsd++) {
       
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       CGRect frame;
-      frame = CGRectMake(_scrollViewMargin + marginSide + ((nmsd - (_gridInterval * thisRow)) * gridKeyWidth),
-                                  _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), gridKeyWidth, gridKeyHeight);
+      frame = CGRectMake(_scrollViewMargin + _marginSide + ((nmsd - (_gridInterval * thisRow)) * _gridKeyWidth),
+                                  _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), _gridKeyWidth, gridKeyHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -286,10 +305,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)layoutUserButtons {
     // gets width of screen in landscape
-  CGFloat screenWidth = [UIScreen mainScreen].bounds.size.height;
   
-  CGFloat buttonsViewWidth = (buttonSize * 2) + (marginBetweenButtons * 3);
-  CGFloat buttonsViewHeight = buttonSize + (marginBetweenButtons * 2);
+  CGFloat buttonsViewWidth = (_buttonSize * 2) + (_marginBetweenButtons * 3);
+  CGFloat buttonsViewHeight = _buttonSize + (_marginBetweenButtons * 2);
   
   CGFloat xOrigin = 0.f;
   CGFloat yOrigin = _statusBarHeight;
@@ -300,25 +318,25 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   
   if ([_userButtonsPosition isEqualToString:@"topLeft"]) {
   } else if ([_userButtonsPosition isEqualToString:@"topRight"]) {
-    xOrigin = screenWidth - buttonsViewWidth;
-    xFillX = screenWidth - (buttonsViewWidth / 2);
-    xFillY = screenWidth - buttonsViewWidth;
+    xOrigin = _screenWidth - buttonsViewWidth;
+    xFillX = _screenWidth - (buttonsViewWidth / 2);
+    xFillY = _screenWidth - buttonsViewWidth;
   } else if ([_userButtonsPosition isEqualToString:@"bottomLeft"]) {
     yOrigin = self.view.bounds.size.height - buttonsViewHeight;
     yFillX = self.view.bounds.size.height - buttonsViewHeight;
     yFillY = self.view.bounds.size.height - (buttonsViewHeight / 2);
   } else if ([_userButtonsPosition isEqualToString:@"bottomRight"]) {
-    xOrigin = screenWidth - buttonsViewWidth;
+    xOrigin = _screenWidth - buttonsViewWidth;
     yOrigin = self.view.bounds.size.height - buttonsViewHeight;
-    xFillX = screenWidth - (buttonsViewWidth / 2);
+    xFillX = _screenWidth - (buttonsViewWidth / 2);
     yFillX = self.view.bounds.size.height - buttonsViewHeight;
-    xFillY = screenWidth - buttonsViewWidth;
+    xFillY = _screenWidth - buttonsViewWidth;
     yFillY = self.view.bounds.size.height - (buttonsViewHeight / 2);
   }
   
   UIView *roundedButtonsView = [[UIView alloc] initWithFrame:CGRectMake(xOrigin, yOrigin, buttonsViewWidth, buttonsViewHeight)];
   roundedButtonsView.backgroundColor = _backgroundColour;
-  roundedButtonsView.layer.cornerRadius = buttonSize / 2.f;
+  roundedButtonsView.layer.cornerRadius = _buttonSize / 2.f;
   
   UIView *buttonsViewFillXCurve = [[UIView alloc] initWithFrame:CGRectMake(xFillX, yFillX, buttonsViewWidth / 2, buttonsViewHeight)];
   buttonsViewFillXCurve.backgroundColor = _backgroundColour;
@@ -330,15 +348,15 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [self.view addSubview:buttonsViewFillXCurve];
   [self.view addSubview:roundedButtonsView];
   
-  UIButton *settingsButton = [[UIButton alloc] initWithFrame:CGRectMake(marginBetweenButtons, marginBetweenButtons, buttonSize, buttonSize)];
+  UIButton *settingsButton = [[UIButton alloc] initWithFrame:CGRectMake(_marginBetweenButtons, _marginBetweenButtons, _buttonSize, _buttonSize)];
   settingsButton.backgroundColor = [UIColor whiteColor];
-  settingsButton.layer.cornerRadius = buttonSize / 2;
+  settingsButton.layer.cornerRadius = _buttonSize / 2;
   [settingsButton addTarget:self action:@selector(settingsButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
   [roundedButtonsView addSubview:settingsButton];
   
-  UIButton *helpButton = [[UIButton alloc] initWithFrame:CGRectMake(buttonSize + (marginBetweenButtons * 2), marginBetweenButtons, buttonSize, buttonSize)];
+  UIButton *helpButton = [[UIButton alloc] initWithFrame:CGRectMake(_buttonSize + (_marginBetweenButtons * 2), _marginBetweenButtons, _buttonSize, _buttonSize)];
   helpButton.backgroundColor = [UIColor whiteColor];
-  helpButton.layer.cornerRadius = buttonSize / 2;
+  helpButton.layer.cornerRadius = _buttonSize / 2;
   [helpButton addTarget:self action:@selector(helpButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
   [roundedButtonsView addSubview:helpButton];
 }
@@ -360,15 +378,35 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 #pragma mark - presenting other views methods
 
 -(void)settingsButtonPressed:(UIButton *)sender {
-  SettingsViewController *settingsVC = [[SettingsViewController alloc] initWithNibName:@"SettingsViewController" bundle:nil];
+  SettingsViewController *settingsVC;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    settingsVC = [[SettingsViewController alloc] initWithNibName:@"SettingsViewController~iPhone" bundle:nil];
+  } else { // iPad
+    settingsVC = [[SettingsViewController alloc] initWithNibName:@"SettingsViewController~iPad" bundle:nil];
+  }
   settingsVC.dataModel = self.dataModel;
   settingsVC.delegate = self;
-  [self presentViewController:settingsVC animated:YES completion:nil];
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    [self presentViewController:settingsVC animated:YES completion:nil];
+  } else { // iPad
+    [settingsVC presentInParentViewController:self];
+  }
 }
 
 -(void)helpButtonPressed:(UIButton *)sender {
-  HelpViewController *_helpVC = [[HelpViewController alloc] initWithNibName:@"HelpViewController" bundle:nil];
-  [self presentViewController:_helpVC animated:YES completion:nil];
+  HelpViewController *helpVC;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    helpVC = [[HelpViewController alloc] initWithNibName:@"HelpViewController~iPhone" bundle:nil];
+  } else { // iPad
+    helpVC = [[HelpViewController alloc] initWithNibName:@"HelpViewController~iPad" bundle:nil];
+  }
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    [self presentViewController:helpVC animated:YES completion:nil];
+  } else { // iPad
+    [self.view addSubview:helpVC.view];
+    [self addChildViewController:helpVC];
+    [helpVC didMoveToParentViewController:self];
+  }
 }
 
 #pragma mark - musical logic
@@ -563,25 +601,15 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 #pragma mark - scrollview methods
 
 -(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-  _event = event;
-//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-  _event = event;
-//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-  _event = event;
-    // ensures that keys will lift if touch went down on scrollView then dragged into key
-//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
-//  [self updateTouches];
 }
 
 -(void)customScrollViewTouchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  _event = event;
-//  [self updateTouches];
 }
 
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView {

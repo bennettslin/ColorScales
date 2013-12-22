@@ -13,7 +13,12 @@
 
 -(BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  self.keyboardVC = [[KeyboardViewController alloc] initWithNibName:@"KeyboardViewController" bundle:nil];
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    self.keyboardVC = [[KeyboardViewController alloc] initWithNibName:@"KeyboardViewController~iPhone" bundle:nil];
+  } else { // iPad
+    self.keyboardVC = [[KeyboardViewController alloc] initWithNibName:@"KeyboardViewController~iPad" bundle:nil];
+  }
+  
   self.window.rootViewController = self.keyboardVC;
   [self.window makeKeyAndVisible];
   

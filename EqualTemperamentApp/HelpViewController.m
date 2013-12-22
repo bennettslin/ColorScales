@@ -28,7 +28,13 @@
 }
 
 -(IBAction)closeButtonTapped:(id)sender {
-  [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  } else { // iPad
+    [self willMoveToParentViewController:nil];
+    [self.view removeFromSuperview];
+    [self removeFromParentViewController];
+  }
 }
 
 #pragma mark - app methods

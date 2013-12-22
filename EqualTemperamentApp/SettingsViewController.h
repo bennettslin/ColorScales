@@ -43,8 +43,11 @@
 
 @property (strong, nonatomic) DataModel *dataModel;
 @property (weak, nonatomic) id<SettingsDelegate> delegate;
+@property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
 
 -(IBAction)doneButtonTapped:(id)sender;
+-(void)presentInParentViewController:(UIViewController *)parentVC;
+-(void)dismissFromParentViewController;
 
 @end
 

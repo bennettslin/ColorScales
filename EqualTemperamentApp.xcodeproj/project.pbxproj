@@ -27,7 +27,7 @@
 		3F9413CE1855A0C30067CFBF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F9413CD1855A0C30067CFBF /* AudioToolbox.framework */; };
 		3F9413D31855A0F70067CFBF /* mo_audio.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3F9413D01855A0F70067CFBF /* mo_audio.mm */; };
 		3FAA709C1858413A0041268E /* KeyboardViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA709A1858413A0041268E /* KeyboardViewController.mm */; };
-		3FAA709D1858413A0041268E /* KeyboardViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA709B1858413A0041268E /* KeyboardViewController.xib */; };
+		3FAA709D1858413A0041268E /* KeyboardViewController~iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA709B1858413A0041268E /* KeyboardViewController~iPhone.xib */; };
 		3FAA7189185841EC0041268E /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA709F185841EB0041268E /* AUTHORS */; };
 		3FAA718A185841EC0041268E /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA70A0185841EB0041268E /* COPYING */; };
 		3FAA718B185841EC0041268E /* DEVELOPER in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA70A1185841EB0041268E /* DEVELOPER */; };
@@ -164,10 +164,12 @@
 		3FAA720E185841EC0041268E /* TODO in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7187185841EC0041268E /* TODO */; };
 		3FAA720F185841EC0041268E /* VERSIONS in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7188185841EC0041268E /* VERSIONS */; };
 		3FAA721C185846290041268E /* HelpViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA721A185846290041268E /* HelpViewController.m */; };
-		3FAA721D185846290041268E /* HelpViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA721B185846290041268E /* HelpViewController.xib */; };
+		3FAA721D185846290041268E /* HelpViewController~iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA721B185846290041268E /* HelpViewController~iPhone.xib */; };
 		3FAA7221185848880041268E /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA721F185848880041268E /* SettingsViewController.m */; };
-		3FAA7222185848880041268E /* SettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7220185848880041268E /* SettingsViewController.xib */; };
-		3FB3EF9F1864199E00D008E7 /* KeyGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */; };
+		3FAA7222185848880041268E /* SettingsViewController~iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA7220185848880041268E /* SettingsViewController~iPhone.xib */; };
+		3FB3EFAA1866C16C00D008E7 /* KeyboardViewController~iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FB3EFA91866C16C00D008E7 /* KeyboardViewController~iPad.xib */; };
+		3FB3EFAC1866D35000D008E7 /* SettingsViewController~iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FB3EFAB1866D35000D008E7 /* SettingsViewController~iPad.xib */; };
+		3FB3EFAE1866E6A500D008E7 /* HelpViewController~iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FB3EFAD1866E6A500D008E7 /* HelpViewController~iPad.xib */; };
 		3FFFE2391863BB2100C28478 /* NSObject+ObjectID.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */; };
 /* End PBXBuildFile section */
 
@@ -216,7 +218,7 @@
 		3F9413D21855A0F70067CFBF /* momu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = momu.h; sourceTree = "<group>"; };
 		3FAA70991858413A0041268E /* KeyboardViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyboardViewController.h; sourceTree = "<group>"; };
 		3FAA709A1858413A0041268E /* KeyboardViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyboardViewController.mm; sourceTree = "<group>"; };
-		3FAA709B1858413A0041268E /* KeyboardViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = KeyboardViewController.xib; sourceTree = "<group>"; };
+		3FAA709B1858413A0041268E /* KeyboardViewController~iPhone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "KeyboardViewController~iPhone.xib"; sourceTree = "<group>"; };
 		3FAA709F185841EB0041268E /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		3FAA70A0185841EB0041268E /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		3FAA70A1185841EB0041268E /* DEVELOPER */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEVELOPER; sourceTree = "<group>"; };
@@ -450,12 +452,13 @@
 		3FAA7188185841EC0041268E /* VERSIONS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = VERSIONS; sourceTree = "<group>"; };
 		3FAA7219185846290041268E /* HelpViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HelpViewController.h; sourceTree = "<group>"; };
 		3FAA721A185846290041268E /* HelpViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HelpViewController.m; sourceTree = "<group>"; };
-		3FAA721B185846290041268E /* HelpViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = HelpViewController.xib; sourceTree = "<group>"; };
+		3FAA721B185846290041268E /* HelpViewController~iPhone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "HelpViewController~iPhone.xib"; sourceTree = "<group>"; };
 		3FAA721E185848880041268E /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		3FAA721F185848880041268E /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
-		3FAA7220185848880041268E /* SettingsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingsViewController.xib; sourceTree = "<group>"; };
-		3FB3EF9D1864199E00D008E7 /* KeyGestureRecognizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyGestureRecognizer.h; sourceTree = "<group>"; };
-		3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyGestureRecognizer.m; sourceTree = "<group>"; };
+		3FAA7220185848880041268E /* SettingsViewController~iPhone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "SettingsViewController~iPhone.xib"; sourceTree = "<group>"; };
+		3FB3EFA91866C16C00D008E7 /* KeyboardViewController~iPad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "KeyboardViewController~iPad.xib"; sourceTree = "<group>"; };
+		3FB3EFAB1866D35000D008E7 /* SettingsViewController~iPad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "SettingsViewController~iPad.xib"; sourceTree = "<group>"; };
+		3FB3EFAD1866E6A500D008E7 /* HelpViewController~iPad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "HelpViewController~iPad.xib"; sourceTree = "<group>"; };
 		3FFFE2371863BB2100C28478 /* NSObject+ObjectID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+ObjectID.h"; sourceTree = "<group>"; };
 		3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+ObjectID.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -526,7 +529,7 @@
 				3FB3EFA5186579DF00D008E7 /* Controllers */,
 				3FB3EFA4186579C600D008E7 /* Views */,
 				3FB3EFA3186579B500D008E7 /* Models */,
-				3FB3EFA618657A0800D008E7 /* Helpers */,
+				3FB3EFA618657A0800D008E7 /* Categories */,
 				3F9413AA18556EA40067CFBF /* Images.xcassets */,
 				3F94139618556EA40067CFBF /* Supporting Files */,
 			);
@@ -833,6 +836,8 @@
 			children = (
 				3F5A589118599EFB00E62735 /* DataModel.h */,
 				3F5A589218599EFB00E62735 /* DataModel.m */,
+				3F15D95A18602609002377B5 /* KeyboardLogic.h */,
+				3F15D95B18602609002377B5 /* KeyboardLogic.m */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -853,30 +858,29 @@
 			children = (
 				3FAA70991858413A0041268E /* KeyboardViewController.h */,
 				3FAA709A1858413A0041268E /* KeyboardViewController.mm */,
-				3FAA709B1858413A0041268E /* KeyboardViewController.xib */,
+				3FAA709B1858413A0041268E /* KeyboardViewController~iPhone.xib */,
+				3FB3EFA91866C16C00D008E7 /* KeyboardViewController~iPad.xib */,
 				3FAA721E185848880041268E /* SettingsViewController.h */,
 				3FAA721F185848880041268E /* SettingsViewController.m */,
-				3FAA7220185848880041268E /* SettingsViewController.xib */,
+				3FAA7220185848880041268E /* SettingsViewController~iPhone.xib */,
+				3FB3EFAB1866D35000D008E7 /* SettingsViewController~iPad.xib */,
 				3FAA7219185846290041268E /* HelpViewController.h */,
 				3FAA721A185846290041268E /* HelpViewController.m */,
-				3FAA721B185846290041268E /* HelpViewController.xib */,
+				3FAA721B185846290041268E /* HelpViewController~iPhone.xib */,
+				3FB3EFAD1866E6A500D008E7 /* HelpViewController~iPad.xib */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
 		};
-		3FB3EFA618657A0800D008E7 /* Helpers */ = {
+		3FB3EFA618657A0800D008E7 /* Categories */ = {
 			isa = PBXGroup;
 			children = (
-				3FB3EF9D1864199E00D008E7 /* KeyGestureRecognizer.h */,
-				3FB3EF9E1864199E00D008E7 /* KeyGestureRecognizer.m */,
-				3F15D95A18602609002377B5 /* KeyboardLogic.h */,
-				3F15D95B18602609002377B5 /* KeyboardLogic.m */,
 				3F7551B3185DAD8E0059350E /* UIColor+ColourWheel.h */,
 				3F7551B4185DAD8E0059350E /* UIColor+ColourWheel.m */,
 				3FFFE2371863BB2100C28478 /* NSObject+ObjectID.h */,
 				3FFFE2381863BB2100C28478 /* NSObject+ObjectID.m */,
 			);
-			name = Helpers;
+			name = Categories;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -970,21 +974,22 @@
 				3FAA71B1185841EC0041268E /* sineblnk.raw in Resources */,
 				3FAA71AC185841EC0041268E /* peksblnk.raw in Resources */,
 				3FAA71AE185841EC0041268E /* ridecymb.raw in Resources */,
-				3FAA709D1858413A0041268E /* KeyboardViewController.xib in Resources */,
+				3FAA709D1858413A0041268E /* KeyboardViewController~iPhone.xib in Resources */,
 				3FAA71B2185841EC0041268E /* sinewave.raw in Resources */,
 				3FAA7198185841EC0041268E /* impuls20.raw in Resources */,
-				3FAA7222185848880041268E /* SettingsViewController.xib in Resources */,
+				3FAA7222185848880041268E /* SettingsViewController~iPhone.xib in Resources */,
 				3FAA718E185841EC0041268E /* bassdrum.raw in Resources */,
 				3FAA7194185841EC0041268E /* fwavblnk.raw in Resources */,
 				3FAA71BA185841EC0041268E /* README in Resources */,
 				3FAA71B4185841EC0041268E /* snglpeak.raw in Resources */,
-				3FAA721D185846290041268E /* HelpViewController.xib in Resources */,
+				3FAA721D185846290041268E /* HelpViewController~iPhone.xib in Resources */,
 				3FAA7199185841EC0041268E /* impuls40.raw in Resources */,
 				3FAA7190185841EC0041268E /* cowbell1.raw in Resources */,
 				3FAA71A0185841EC0041268E /* mand12.raw in Resources */,
 				3FAA71B8185841EC0041268E /* tommiddr.raw in Resources */,
 				3FAA71A2185841EC0041268E /* mand3.raw in Resources */,
 				3FAA719E185841EC0041268E /* mand10.raw in Resources */,
+				3FB3EFAC1866D35000D008E7 /* SettingsViewController~iPad.xib in Resources */,
 				3FAA71AF185841EC0041268E /* silence.raw in Resources */,
 				3FAA71A6185841EC0041268E /* mand7.raw in Resources */,
 				3FAA720F185841EC0041268E /* VERSIONS in Resources */,
@@ -1002,9 +1007,11 @@
 				3FAA71A8185841EC0041268E /* mand9.raw in Resources */,
 				3F94139A18556EA40067CFBF /* InfoPlist.strings in Resources */,
 				3FAA71A1185841EC0041268E /* mand2.raw in Resources */,
+				3FB3EFAE1866E6A500D008E7 /* HelpViewController~iPad.xib in Resources */,
 				3FAA71A4185841EC0041268E /* mand5.raw in Resources */,
 				3FAA71AD185841EC0041268E /* ppksblnk.raw in Resources */,
 				3FAA71A7185841EC0041268E /* mand8.raw in Resources */,
+				3FB3EFAA1866C16C00D008E7 /* KeyboardViewController~iPad.xib in Resources */,
 				3FAA71B6185841EC0041268E /* tomhidrm.raw in Resources */,
 				3FAA71AA185841EC0041268E /* marmstk1.raw in Resources */,
 				3FAA7197185841EC0041268E /* impuls10.raw in Resources */,
@@ -1089,7 +1096,6 @@
 				3FAA71EC185841EC0041268E /* OneZero.cpp in Sources */,
 				3FAA71CA185841EC0041268E /* DelayA.cpp in Sources */,
 				3FAA71BC185841EC0041268E /* Asymp.cpp in Sources */,
-				3FB3EF9F1864199E00D008E7 /* KeyGestureRecognizer.m in Sources */,
 				3F15D95C18602609002377B5 /* KeyboardLogic.m in Sources */,
 				3FAA71DD185841EC0041268E /* InetWvOut.cpp in Sources */,
 				3FAA7201185841EC0041268E /* Stk.mm in Sources */,
@@ -1247,7 +1253,9 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "EqualTemperamentApp/EqualTemperamentApp-Prefix.pch";
 				INFOPLIST_FILE = "EqualTemperamentApp/EqualTemperamentApp-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1260,7 +1268,9 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "EqualTemperamentApp/EqualTemperamentApp-Prefix.pch";
 				INFOPLIST_FILE = "EqualTemperamentApp/EqualTemperamentApp-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

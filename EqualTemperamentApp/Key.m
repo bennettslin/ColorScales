@@ -9,11 +9,10 @@
 #import "Key.h"
 #import "UIColor+ColourWheel.h"
 #import "NSObject+ObjectID.h"
-#import "KeyGestureRecognizer.h"
 
 const NSUInteger coloursInPicker = 24;
 
-@interface Key () <KeyGestureRecognizerDelegate, UIGestureRecognizerDelegate>
+@interface Key () <UIGestureRecognizerDelegate>
 
 @end
 
@@ -34,7 +33,9 @@ const NSUInteger coloursInPicker = 24;
   if (self) {
     self.layer.drawsAsynchronously = YES;
     self.multipleTouchEnabled = NO;
-      
+    
+      // ugh... turns out it didn't even need the custom gesture recognizer!
+    
     NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
     [self findColoursWithColourStyle:colourStyle
           andRootColourWheelPosition:[rootColourWheelPosition unsignedIntegerValue]
@@ -206,9 +207,9 @@ const NSUInteger coloursInPicker = 24;
   [self.normalColour getRed:&normalRed green:&normalGreen blue:&normalBlue alpha:&alpha];
   
   if ([colourStyle isEqualToString:@"coloured"]) {
-    highlightedRed = normalRed + ((1.f - normalRed) * 4/5.f) + 0.1f;
-    highlightedGreen = normalGreen + ((1.f - normalGreen) * 4/5.f) + 0.1f;
-    highlightedBlue = normalBlue + ((1.f - normalBlue) * 4/5.f) + 0.1f;
+    highlightedRed = normalRed + ((1.f - normalRed) * 4/5.f) + 0.2f;
+    highlightedGreen = normalGreen + ((1.f - normalGreen) * 4/5.f) + 0.2f;
+    highlightedBlue = normalBlue + ((1.f - normalBlue) * 4/5.f) + 0.2f;
   } else {
       // for noColour
     highlightedRed = normalRed + ((1.f - normalRed) / 4.f);

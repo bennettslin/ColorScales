@@ -48,8 +48,22 @@
 -(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
   if (self) {
+//    self.modalPresentationStyle = UIModalTransitionStyleFlipHorizontal;
   }
   return self;
+}
+
+-(void)presentInParentViewController:(UIViewController *)parentVC {
+  self.view.frame = parentVC.view.bounds;
+  [parentVC.view addSubview:self.view];
+  [parentVC addChildViewController:self];
+  [self didMoveToParentViewController:self.parentViewController];
+}
+
+-(void)dismissFromParentViewController {
+  [self willMoveToParentViewController:nil];
+  [self.view removeFromSuperview];
+  [self removeFromParentViewController];
 }
 
   // TODO: need to add images individually to buttons
@@ -58,9 +72,17 @@
   _coloursInPicker = 24;
   _backgroundColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:1.f];
   _pickerCoverColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:0.6f];
-  self.view.backgroundColor = _backgroundColour;
-  _changesMade = NO;
   
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    self.view.backgroundColor = _backgroundColour;
+  } else { // iPad
+    self.view.backgroundColor = [UIColor colorWithRed:0.f green:0.f blue:0.f alpha:0.5f];
+    self.iPadPopupView.backgroundColor = _backgroundColour;
+    self.iPadPopupView.layer.cornerRadius = 10.f;
+  }
+
+
+  _changesMade = NO;
   _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
   _instrument = self.dataModel.instrument;
   _keyCharacter = self.dataModel.keyCharacter;
@@ -70,32 +92,38 @@
   _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   
-  NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
-  for (int i = 2; i <= 48; i++) {
-    [pickerTonesTemp addObject:[NSNumber numberWithInt:i]];
-  }
-  _pickerTones = [NSArray arrayWithArray:pickerTonesTemp];
-  self.tonesPerOctavePicker.delegate = self;
-  [self.tonesPerOctavePicker selectRow:_tonesPerOctave - 2 inComponent:0 animated:NO];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
+    for (int i = 2; i <= 48; i++) {
+      [pickerTonesTemp addObject:[NSNumber numberWithInt:i]];
+    }
+    _pickerTones = [NSArray arrayWithArray:pickerTonesTemp];
+    self.tonesPerOctavePicker.delegate = self;
+    [self.tonesPerOctavePicker selectRow:_tonesPerOctave - 2 inComponent:0 animated:NO];
+  });
 
-  self.gridIntervalPicker.delegate = self;
-  [self.gridIntervalPicker selectRow:_gridInterval - 1 inComponent:0 animated:NO];
-  _gridPickerCover = [self createAndAddCoverToPicker:self.gridIntervalPicker];
-  if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
-    [self coverPicker:self.gridIntervalPicker];
-  } else {
-    [self uncoverPicker:self.gridIntervalPicker];
-  }
-
-  self.colourPicker.delegate = self;
-  [self.colourPicker selectRow:_rootColourWheelPosition + (_coloursInPicker * 2000) inComponent:0 animated:NO];
-  _colourPickerCover = [self createAndAddCoverToPicker:self.colourPicker];
-  if ([_colourStyle isEqualToString:@"noColour"]) {
-    [self coverPicker:self.colourPicker];
-  } else {
-    [self uncoverPicker:self.colourPicker];
-  }
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self.gridIntervalPicker.delegate = self;
+    [self.gridIntervalPicker selectRow:_gridInterval - 1 inComponent:0 animated:NO];
+    _gridPickerCover = [self createAndAddCoverToPicker:self.gridIntervalPicker];
+    if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+      [self coverPicker:self.gridIntervalPicker];
+    } else {
+      [self uncoverPicker:self.gridIntervalPicker];
+    }
+  });
   
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self.colourPicker.delegate = self;
+    [self.colourPicker selectRow:_rootColourWheelPosition + (_coloursInPicker * 2000) inComponent:0 animated:NO];
+    _colourPickerCover = [self createAndAddCoverToPicker:self.colourPicker];
+    if ([_colourStyle isEqualToString:@"noColour"]) {
+      [self coverPicker:self.colourPicker];
+    } else {
+      [self uncoverPicker:self.colourPicker];
+    }
+  });
+
   _tonesPerOctaveButtons = @[self.twelveButton, self.seventeenButton, self.nineteenButton,
                              self.twentyFourButton, self.thirtyOneButton, self.fortyOneButton];
   _instrumentButtons = @[self.pianoButton, self.violinButton, self.steelpanButton];
@@ -320,7 +348,13 @@
     self.dataModel.gridInterval = [NSNumber numberWithUnsignedInteger:_gridInterval];
     [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
   }
-  [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  } else { // iPad
+    [self willMoveToParentViewController:nil];
+    [self.view removeFromSuperview];
+    [self removeFromParentViewController];
+  }
 }
 
 #pragma mark - change view state methods
