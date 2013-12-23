@@ -6,6 +6,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SettingsViewController">
             <connections>
+                <outlet property="bigKeysButton" destination="km5-cJ-oZ3" id="bcs-km-MTa"/>
                 <outlet property="blankKeyButton" destination="1pI-MY-0yE" id="ET7-4E-sLN"/>
                 <outlet property="colourPicker" destination="kMB-hN-hx9" id="P7W-xs-nFv"/>
                 <outlet property="fifthWheelColourButton" destination="gYc-qQ-O0e" id="2eB-Ao-YBI"/>
@@ -17,6 +18,7 @@
                 <outlet property="numberedKeyButton" destination="6Ok-w2-PyU" id="7C8-dn-IXV"/>
                 <outlet property="pianoButton" destination="RUv-fG-wO0" id="QhV-wW-Lhq"/>
                 <outlet property="seventeenButton" destination="b2s-b9-gSR" id="6mO-aG-OP3"/>
+                <outlet property="smallKeysButton" destination="fsf-Ap-pIa" id="baI-iy-HbL"/>
                 <outlet property="steelpanButton" destination="4ff-wU-5Mp" id="hNz-iG-KnP"/>
                 <outlet property="stepwiseColourButton" destination="0kD-Vn-VSt" id="AEa-4y-6jn"/>
                 <outlet property="thirtyOneButton" destination="LBc-f4-too" id="dnj-AI-DfY"/>
@@ -38,10 +40,10 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FC1-hW-kAg">
-                    <rect key="frame" x="410" y="264" width="49" height="36"/>
+                    <rect key="frame" x="410" y="264" width="46" height="36"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
-                    <state key="normal" title="Done">
+                    <state key="normal" title="Save">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
@@ -233,6 +235,20 @@
                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fsf-Ap-pIa">
+                    <rect key="frame" x="379" y="211" width="70" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" title="smallKeys">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="km5-cJ-oZ3">
+                    <rect key="frame" x="384" y="249" width="55" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" title="bigKeys">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                </button>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
             <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>

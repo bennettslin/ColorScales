@@ -10,6 +10,7 @@
 #include "Stk.h"
 #include "Mandolin.h"
 #import "SettingsViewController.h"
+#import "HelpViewController.h"
 @class Key;
 
 using namespace stk;
@@ -18,9 +19,11 @@ struct AudioData {
 };
 
 
-@interface KeyboardViewController : UIViewController <SettingsDelegate>
+@interface KeyboardViewController : UIViewController <SettingsDelegate, HelpDelegate>
 
 @property (strong, nonatomic) NSNumber *inputTonesPerOctave;
 @property (strong, nonatomic) NSNumber *rootTone;
+
+-(void)removeDarkOverlay;
 
 @end

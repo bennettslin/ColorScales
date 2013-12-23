@@ -22,6 +22,7 @@
   [aCoder encodeObject:self.colourStyle forKey:@"colourStyle"];
   [aCoder encodeObject:self.rootColourWheelPosition forKey:@"rootColourWheelPosition"];
   [aCoder encodeObject:self.userButtonsPosition forKey:@"userButtonsPosition"];
+  [aCoder encodeObject:self.keySize forKey:@"keySize"];
 }
 
 -(id)initWithCoder:(NSCoder *)aDecoder {
@@ -34,6 +35,7 @@
     self.colourStyle = [aDecoder decodeObjectForKey:@"colourStyle"];
     self.rootColourWheelPosition = [aDecoder decodeObjectForKey:@"rootColourWheelPosition"];
     self.userButtonsPosition = [aDecoder decodeObjectForKey:@"userButtonsPosition"];
+    self.keySize = [aDecoder decodeObjectForKey:@"keySize"];
   }
   return self;
 }

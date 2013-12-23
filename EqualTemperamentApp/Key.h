@@ -45,6 +45,6 @@
 -(void)liftKey:(Key *)key;
 -(void)addKeyToKeysSounded:(Key *)key;
 -(void)removeKeyFromKeysSounded:(Key *)key;
--(UIScrollView *)tellKeyScrollview;
+//-(UIScrollView *)tellKeyScrollview;
 
 @end

@@ -24,8 +24,9 @@
   NSArray *_keyboardStyleButtons;
   NSArray *_colourStyleButtons;
   NSArray *_userButtons;
+  NSArray *_keySizeButtons;
+  
   NSUInteger _rootColourWheelPosition;
-
   NSUInteger _tonesPerOctave;
   NSString *_instrument;
   NSString *_keyboardStyle;
@@ -33,6 +34,7 @@
   NSString *_colourStyle;
   NSString *_keyCharacter;
   NSString *_userButtonsPosition;
+  NSString *_keySize;
   
   UIColor *_backgroundColour;
   UIColor *_pickerCoverColour;
@@ -53,19 +55,6 @@
   return self;
 }
 
--(void)presentInParentViewController:(UIViewController *)parentVC {
-  self.view.frame = parentVC.view.bounds;
-  [parentVC.view addSubview:self.view];
-  [parentVC addChildViewController:self];
-  [self didMoveToParentViewController:self.parentViewController];
-}
-
--(void)dismissFromParentViewController {
-  [self willMoveToParentViewController:nil];
-  [self.view removeFromSuperview];
-  [self removeFromParentViewController];
-}
-
   // TODO: need to add images individually to buttons
 -(void)viewDidLoad {
   [super viewDidLoad];
@@ -75,12 +64,14 @@
   
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
     self.view.backgroundColor = _backgroundColour;
+    self.smallKeysButton.hidden = YES;
+    self.bigKeysButton.hidden = YES;
   } else { // iPad
-    self.view.backgroundColor = [UIColor colorWithRed:0.f green:0.f blue:0.f alpha:0.5f];
+    self.view.backgroundColor = [UIColor clearColor];
     self.iPadPopupView.backgroundColor = _backgroundColour;
     self.iPadPopupView.layer.cornerRadius = 10.f;
+    self.view.userInteractionEnabled = YES;
   }
-
 
   _changesMade = NO;
   _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
@@ -91,6 +82,7 @@
   _colourStyle = self.dataModel.colourStyle;
   _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
   _userButtonsPosition = self.dataModel.userButtonsPosition;
+  _keySize = self.dataModel.keySize;
   
   dispatch_async(dispatch_get_main_queue(), ^{
     NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
@@ -131,7 +123,9 @@
   _keyboardStyleButtons = @[self.whiteBlackLayoutButton, self.gridLayoutButton];
   _colourStyleButtons = @[self.fifthWheelColourButton, self.stepwiseColourButton, self.noColourButton];
   _userButtons = @[self.userButtonsTopRightButton, self.userButtonsTopLeftButton, self.userButtonsBottomRightButton, self.userButtonsBottomLeftButton];
-  _allButtonArrays = @[_tonesPerOctaveButtons, _instrumentButtons, _keyCharacterButtons, _keyboardStyleButtons, _colourStyleButtons, _userButtons, _instrumentButtons];
+  _keySizeButtons = @[self.smallKeysButton, self.bigKeysButton];
+  
+  _allButtonArrays = @[_tonesPerOctaveButtons, _instrumentButtons, _keyCharacterButtons, _keyboardStyleButtons, _colourStyleButtons, _userButtons, _instrumentButtons, _keySizeButtons];
   
   for (NSArray *buttonsArray in _allButtonArrays) {
     for (UIButton *button in buttonsArray) {
@@ -332,12 +326,33 @@
       }
     }
   }
-//  NSLog(@"new settings: %lu, %@, %@, %@, %@, %@", (unsigned long)_tonesPerOctave, _instrument, _keyCharacter, _keyboardStyle, _colourStyle, _userButtonsPosition);
+  
+  if ([_keySizeButtons containsObject:sender]) {
+    if (sender == self.smallKeysButton) {
+      if (![_keySize isEqualToString:@"smallKeys"]) {
+        _keySize = @"smallKeys";
+        _changesMade = YES;
+      }
+    } else if (sender == self.bigKeysButton) {
+      if (![_keySize isEqualToString:@"bigKeys"]) {
+        _keySize = @"bigKeys";
+        _changesMade = YES;
+      }
+    }
+    if (_changesMade) {
+      for (UIButton *button in _keySizeButtons) {
+        if (button == sender) {
+          button.selected = YES;
+        } else {
+          button.selected = NO;
+        }
+      }
+    }
+  }
 }
 
 -(IBAction)doneButtonTapped:(id)sender {
   if (_changesMade) {
-//    NSLog(@"Changes made");
     self.dataModel.tonesPerOctave = [NSNumber numberWithUnsignedInteger:_tonesPerOctave ];
     self.dataModel.instrument = _instrument;
     self.dataModel.keyCharacter = _keyCharacter;
@@ -346,14 +361,31 @@
     self.dataModel.rootColourWheelPosition = [NSNumber numberWithUnsignedInteger:_rootColourWheelPosition];
     self.dataModel.userButtonsPosition = _userButtonsPosition;
     self.dataModel.gridInterval = [NSNumber numberWithUnsignedInteger:_gridInterval];
-    [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
+    self.dataModel.keySize = _keySize;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
+    });
   }
+  [self returnToParentViewController];
+}
+
+-(void)returnToParentViewController {
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
   } else { // iPad
+    [self.delegate removeDarkOverlay];
     [self willMoveToParentViewController:nil];
     [self.view removeFromSuperview];
     [self removeFromParentViewController];
+  }
+}
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    UITouch *touch = touches.anyObject;
+    if (touch.view == self.view) {
+      [self returnToParentViewController];
+    }
   }
 }
 
@@ -404,6 +436,13 @@
     tempUserButton = self.userButtonsBottomLeftButton;
   }
   
+  UIButton *tempKeySizeButton;
+  if ([_keySize isEqualToString:@"smallKeys"]) {
+    tempKeySizeButton = self.smallKeysButton;
+  } else if ([_keySize isEqualToString:@"bigKeys"]) {
+    tempKeySizeButton = self.bigKeysButton;
+  }
+  
   for (UIButton *button in _instrumentButtons) {
     if (button == tempChosenInstrument) {
       button.selected = YES;
@@ -434,6 +473,13 @@
   }
   for (UIButton *button in _userButtons) {
     if (button == tempUserButton) {
+      button.selected = YES;
+    } else {
+      button.selected = NO;
+    }
+  }
+  for (UIButton *button in _keySizeButtons) {
+    if (button == tempKeySizeButton) {
       button.selected = YES;
     } else {
       button.selected = NO;

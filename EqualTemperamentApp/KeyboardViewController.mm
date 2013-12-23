@@ -7,7 +7,6 @@
 //
 
 #import "KeyboardViewController.h"
-#import "HelpViewController.h"
 #import "mo_audio.h"
 #import "DataModel.h"
 #import "Key.h"
@@ -38,8 +37,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 @implementation KeyboardViewController {
   
     // view constants, differ between iPhone and iPad;
-  CGFloat _marginSide;
-  CGFloat _marginBetweenKeys;
+  CGFloat _screenMarginSide;
   CGFloat _whiteKeyHeight;
   CGFloat _whiteBlackWhiteKeyWidth;
   CGFloat _gridKeyWidth;
@@ -55,6 +53,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   
   CGFloat _screenWidth;
   CGFloat _screenHeight;
+  UIView *_darkOverlay;
   
     // musical variables
   NSUInteger _numberOfOctaves;
@@ -70,6 +69,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   NSString *_colourStyle;
   NSNumber *_rootColourWheelPosition;
   NSString *_userButtonsPosition;
+  NSString *_keySize;
 
   UIEvent *_event; // this is only for the scrollview to know the event
   NSMutableSet *_allSoundedKeys; // added and removed in keyPressed and keyLifted methods only
@@ -80,35 +80,22 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)viewDidLoad {
   [super viewDidLoad];
   
-  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    _marginSide = 1.f;
-    _marginBetweenKeys = 1.f;
-    _whiteKeyHeight = 240.f;
-    _whiteBlackWhiteKeyWidth = 60.f;
-    _gridKeyWidth = 54.f;
-    _buttonSize = 44.f;
-    _marginBetweenButtons = 5.f;
-  } else { // iPad
-    _marginSide = 1.f;
-    _marginBetweenKeys = 1.f;
-    _whiteKeyHeight = 600.f; // change based on real piano keys
-    _whiteBlackWhiteKeyWidth = 120.f;
-    _gridKeyWidth = 108.f;
-    _buttonSize = 88.f;
-    _marginBetweenButtons = 10.f;
-  }
-  
   _screenWidth = [UIScreen mainScreen].bounds.size.height;
   _screenHeight = [UIScreen mainScreen].bounds.size.width;
+  _screenMarginSide = 1.f;
   
     // for landscape statusBarHeight is width?! Whatever...
   _statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
   _backgroundColour = [UIColor colorWithRed:0.3f green:0.3f blue:0.25f alpha:1.f];
   
     // Bennett-tweaked constants
-  _numberOfOctaves = 3;
-  _lowestTone = 130.8127826f; // C3
-  _numberOfGridRows = 3; // for now, but will change based on iPad or iPhone
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _numberOfOctaves = 3;
+    _lowestTone = 130.8127826f; // C3
+  } else { // iPad
+    _numberOfOctaves = 5;
+    _lowestTone = 130.8127826f / 2.f; // C2
+  }
   
     // instantiates self.dataModel only on very first launch
   NSString *path = [self dataFilePath];
@@ -124,6 +111,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     self.dataModel.colourStyle = @"fifthWheel";
     self.dataModel.rootColourWheelPosition = @0;
     self.dataModel.userButtonsPosition = @"bottomRight";
+    self.dataModel.keySize = @"bigKeys";
   }
   [self updateKeyboardWithChangedDataModel:self.dataModel];
   
@@ -135,6 +123,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel {
+  
   if (self.scrollView) {
     [self.scrollView removeFromSuperview];
   }
@@ -146,12 +135,26 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   _colourStyle = self.dataModel.colourStyle;
   _rootColourWheelPosition = self.dataModel.rootColourWheelPosition;
   _userButtonsPosition = self.dataModel.userButtonsPosition;
+  _keySize = self.dataModel.keySize;
   
   [self saveSettings];
   [self establishValuesFromTonesPerOctave];
   [self placeScrollView];
-  [self layoutKeysBasedOnKeyboardStyle];
+  
+  UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+  activityIndicator.center = CGPointMake(_screenWidth / 2.f, _screenHeight / 2.f);
+
+  [self.scrollView addSubview:activityIndicator];
+  [activityIndicator startAnimating];
+  
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self layoutKeysBasedOnKeyboardStyle];
+    [activityIndicator stopAnimating];
+    [activityIndicator removeFromSuperview];
+  });
+
   [self layoutUserButtons];
+  [self defaultScrollViewPosition];
 }
 
 -(void)placeScrollView {
@@ -177,8 +180,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     numberOfKeysMultiplier = _totalKeysPerGridRow;
   }
   
-  self.scrollView.contentSize = CGSizeMake((_marginSide * 2) + (keyWidth * numberOfKeysMultiplier),
-                                           self.scrollView.bounds.size.height);
+  self.scrollView.contentSize = CGSizeMake((_screenMarginSide * 2) + (keyWidth * numberOfKeysMultiplier),
+                                           _screenHeight);
   _scrollViewMargin = [self findScrollViewMargin];
   self.scrollView.delegate = self;
   self.scrollView.customDelegate = self;
@@ -200,7 +203,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(CGFloat)findScrollViewMargin {
   CGFloat scrollViewWidth = self.scrollView.contentSize.width;
-  CGFloat viewWidth = self.view.frame.size.width;
+  CGFloat viewWidth = _screenWidth;
   if (viewWidth > scrollViewWidth) {
     return (viewWidth - scrollViewWidth) / 2;
   }
@@ -208,13 +211,20 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)layoutWhiteBlackKeyboardStyle {
+  CGFloat smallKeysHeightMargin;
+  if ([_keySize isEqualToString:@"smallKeys"]) {
+    smallKeysHeightMargin = (_screenHeight - _whiteKeyHeight) / 2.f;
+  } else { // bigKeys
+    smallKeysHeightMargin = 0.f;
+  }
+  
       // first add white keys
   NSInteger whiteKeyCount = 0;
   for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
     NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
     if ([KeyboardLogic isWhiteKeyGivenScaleDegree:scaleDegree andTonesPerOctave:_tonesPerOctave]) {
-      CGRect frame = CGRectMake(_scrollViewMargin + _marginSide + (whiteKeyCount * _whiteBlackWhiteKeyWidth),
-                                0, _whiteBlackWhiteKeyWidth, _whiteKeyHeight + _statusBarHeight);
+      CGRect frame = CGRectMake(_scrollViewMargin + _screenMarginSide + (whiteKeyCount * _whiteBlackWhiteKeyWidth),
+                                smallKeysHeightMargin, _whiteBlackWhiteKeyWidth, _whiteKeyHeight + _statusBarHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
                      andRootColourWheelPosition:_rootColourWheelPosition
@@ -238,7 +248,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     NSInteger blackKeyIndexRow = [theBlackKeys indexOfObject:thisBlackKeyRow];
     CGFloat blackKeyType = [KeyboardLogic getBlackKeyTypeGivenIndexRow:blackKeyIndexRow andTonesPerOctave:_tonesPerOctave];
     CGFloat blackKeyHeightMultiplier = [KeyboardLogic getBlackKeyHeightMultiplierGivenBlackKeyType:blackKeyType];
-    CGFloat blackKeyHeight = blackKeyHeightMultiplier * _whiteKeyHeight;
+    CGFloat blackKeyHeight = blackKeyHeightMultiplier * (_whiteKeyHeight * 9/10.f); // give white keys a little more space
     
     if (blackKeyType == 11/18.f + 0.00001f) {
       blackKeyOffsetMultiplier = 1/2.f;
@@ -252,7 +262,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     for (NSInteger nmsd = 0; nmsd < _totalKeysInKeyboard; nmsd++) {
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       if ([thisBlackKeyRow containsObject:scaleDegree]) {
-        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * _whiteBlackWhiteKeyWidth) + _marginSide + ((_whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset + (blackKeyCount * _whiteBlackWhiteKeyWidth) + blackKeyGapSpace, 0, blackKeyWidth, blackKeyHeight + _statusBarHeight);
+        CGRect frame = CGRectMake(_scrollViewMargin + (initialExtraMultiplier * _whiteBlackWhiteKeyWidth) + _screenMarginSide + ((_whiteBlackWhiteKeyWidth - blackKeyWidth) / 2) + blackKeyOffset + (blackKeyCount * _whiteBlackWhiteKeyWidth) + blackKeyGapSpace, smallKeysHeightMargin, blackKeyWidth, blackKeyHeight + _statusBarHeight);
         Key *thisKey = [[Key alloc] initWithFrame:frame
                                  givenColourStyle:_colourStyle
                        andRootColourWheelPosition:_rootColourWheelPosition
@@ -274,14 +284,13 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)layoutGridKeyboardStyle {
-    // may need to tweak this to get right
   CGFloat gridKeyHeight = _whiteKeyHeight / _numberOfGridRows;
   for (int thisRow = 0; thisRow < _numberOfGridRows; thisRow++) {
     for (NSInteger nmsd = thisRow * _gridInterval; nmsd < _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - (thisRow + 1))); nmsd++) {
-      
+
       NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       CGRect frame;
-      frame = CGRectMake(_scrollViewMargin + _marginSide + ((nmsd - (_gridInterval * thisRow)) * _gridKeyWidth),
+      frame = CGRectMake(_scrollViewMargin + _screenMarginSide + ((nmsd - (_gridInterval * thisRow)) * _gridKeyWidth),
                                   _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), _gridKeyWidth, gridKeyHeight);
       Key *thisKey = [[Key alloc] initWithFrame:frame
                                givenColourStyle:_colourStyle
@@ -296,6 +305,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
 }
 
+
 -(void)finalizeThisKey:(Key *)thisKey withThisNoModScaleDegree:(NSUInteger)nmsd {
   thisKey.backgroundColor = thisKey.normalColour;
   thisKey.noModScaleDegree = nmsd;
@@ -304,6 +314,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)layoutUserButtons {
+  
     // gets width of screen in landscape
   
   CGFloat buttonsViewWidth = (_buttonSize * 2) + (_marginBetweenButtons * 3);
@@ -362,7 +373,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)ensureScrollViewHasCorrectContentOffset {
-  if (self.scrollView.contentSize.width > self.scrollView.frame.size.width) {
+  if (self.scrollView.contentSize.width > _screenWidth) {
     if (self.scrollView.contentOffset.x < 0.f) {
       [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
         self.scrollView.contentOffset = CGPointMake(0, 0);
@@ -371,6 +382,25 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
       [UIView animateWithDuration:0.1f delay:0.f options:UIViewAnimationCurveEaseOut animations:^{
         self.scrollView.contentOffset = CGPointMake(self.scrollView.contentSize.width - self.scrollView.frame.size.width, 0);
       } completion:nil];
+    }
+  }
+}
+
+-(void)defaultScrollViewPosition {
+  NSUInteger numberOfOctavesToOffset;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    numberOfOctavesToOffset = 1;
+  } else { // iPad
+    numberOfOctavesToOffset = 2;
+  }
+  
+  if (self.scrollView.contentSize.width > _screenWidth) {
+    CGFloat keyWidth;
+    if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+      keyWidth = _whiteBlackWhiteKeyWidth;
+      self.scrollView.contentOffset = CGPointMake(_screenMarginSide + (7.f * numberOfOctavesToOffset * keyWidth) - 0.5f, 0); // accommodate key border width
+    } else { // grid
+       // starts at origin if grid layout
     }
   }
 }
@@ -386,11 +416,40 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
   settingsVC.dataModel = self.dataModel;
   settingsVC.delegate = self;
+  [self presentChildViewController:settingsVC];
+//  [self animateDarkOverlayBeforeChildViewController:settingsVC];
+}
+
+-(void)presentChildViewController:(UIViewController *)childVC {
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    [self presentViewController:settingsVC animated:YES completion:nil];
+    [self presentViewController:childVC animated:YES completion:nil];
   } else { // iPad
-    [settingsVC presentInParentViewController:self];
+           // not sure why async dispatch works only when it's applied to both this block
+           // and the settings view controller's picker blocks
+    [self animateDarkOverlayBeforeChildViewController:childVC];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self.view addSubview:childVC.view];
+    });
+    [self addChildViewController:childVC];
+    [childVC didMoveToParentViewController:self];
   }
+}
+
+-(void)animateDarkOverlayBeforeChildViewController:(UIViewController *)childVC {
+  _darkOverlay = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _screenWidth, _screenHeight)];
+  _darkOverlay.backgroundColor = [UIColor clearColor];
+  [self.view addSubview:_darkOverlay];
+  [UIView animateKeyframesWithDuration:0.3f delay:0.f options:UIViewAnimationCurveEaseInOut animations:^{
+    _darkOverlay.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.f alpha:0.5f];
+  } completion:nil];
+}
+
+-(void)removeDarkOverlay {
+  [UIView animateKeyframesWithDuration:0.3f delay:0.f options:UIViewAnimationCurveEaseInOut animations:^{
+    _darkOverlay.backgroundColor = [UIColor clearColor];
+  } completion:^(BOOL finished) {
+    [_darkOverlay removeFromSuperview];
+  }];
 }
 
 -(void)helpButtonPressed:(UIButton *)sender {
@@ -400,13 +459,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   } else { // iPad
     helpVC = [[HelpViewController alloc] initWithNibName:@"HelpViewController~iPad" bundle:nil];
   }
-  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    [self presentViewController:helpVC animated:YES completion:nil];
-  } else { // iPad
-    [self.view addSubview:helpVC.view];
-    [self addChildViewController:helpVC];
-    [helpVC didMoveToParentViewController:self];
-  }
+  helpVC.delegate = self;
+  [self presentChildViewController:helpVC];
 }
 
 #pragma mark - musical logic
@@ -414,51 +468,57 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 -(void)establishValuesFromTonesPerOctave {
   _totalKeysInKeyboard = (_numberOfOctaves * _tonesPerOctave) + 1;
   _perfectFifth = [self findPerfectFifthWithTonesPerOctave:_tonesPerOctave];
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _whiteKeyHeight = _screenHeight * 3/4.f;
+    _whiteBlackWhiteKeyWidth = 60.f;
+  } else { // iPad
+    if ([_keySize isEqualToString:@"smallKeys"] && ![_keyboardStyle isEqualToString:@"grid"]) {
+      _whiteKeyHeight = _screenHeight * 2/5.f; // change based on real piano keys
+      _whiteBlackWhiteKeyWidth = 60.f;
+    } else { // bigKeys or grid
+      _whiteKeyHeight = _screenHeight * 4/5.f; // change based on real piano keys
+      _whiteBlackWhiteKeyWidth = 120.f;
+    }
+  }
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _gridKeyWidth = 54.f;
+    _numberOfGridRows = 3; // for now, but will change based on iPad or iPhone
+  } else { // iPad
+    if ([_keySize isEqualToString:@"smallKeys"]) {
+        // because iPad has five octaves, this number will only ever be 5 or greater
+      if (_totalKeysInKeyboard / _gridInterval >= 8) {
+        _gridKeyWidth = 54.f;
+        _numberOfGridRows = 8;
+      } else if (_totalKeysInKeyboard / _gridInterval >= 7) {
+        _gridKeyWidth = 61.7f;
+        _numberOfGridRows = 7;
+      } else if (_totalKeysInKeyboard / _gridInterval >= 6) {
+        _gridKeyWidth = 72.f;
+        _numberOfGridRows = 6;
+      } else {
+        _gridKeyWidth = 86.4f;
+        _numberOfGridRows = 5;
+      }
+    } else { // bigKeys
+      _gridKeyWidth = 108.f;
+      _numberOfGridRows = 4;
+    }
+  }
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _buttonSize = 44.f;
+    _marginBetweenButtons = 5.f;
+  } else { // iPad
+    _buttonSize = 88.f;
+    _marginBetweenButtons = 10.f;
+  }
 }
 
 -(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave {
   NSUInteger perfectFifth = [KeyboardLogic findPerfectFifthWithTonesPerOctave:tonesPerOctave];
   return perfectFifth;
-}
-
-#pragma mark - archiver methods
-
--(NSString *)documentsDirectory {
-  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-  return [paths firstObject];
-}
-
--(NSString *)dataFilePath {
-  return [[self documentsDirectory] stringByAppendingPathComponent:@"EqualTemperament.plist"];
-}
-
--(void)saveSettings {
-  NSMutableData *data = [[NSMutableData alloc] init];
-  NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
-  [archiver encodeObject:self.dataModel forKey:@"dataModel"];
-  [archiver finishEncoding];
-  [data writeToFile:[self dataFilePath] atomically:YES];
-}
-   
--(void)loadSettingsFromPath:(NSString *)path {
-  NSData *data = [[NSData alloc] initWithContentsOfFile:path];
-  NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-  self.dataModel = [unarchiver decodeObjectForKey:@"dataModel"];
-  [unarchiver finishDecoding];
-}
-
-#pragma mark - app methods
-
--(UIStatusBarStyle)preferredStatusBarStyle {
-  if ([_colourStyle isEqualToString:@"noColour"] && [_keyboardStyle isEqualToString:@"whiteBlack"]) {
-    return UIStatusBarStyleDefault;
-  } else {
-    return UIStatusBarStyleLightContent;
-  }
-}
-
--(void)didReceiveMemoryWarning {
-  [super didReceiveMemoryWarning];
 }
 
 #pragma mark - key sounding methods
@@ -594,10 +654,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [_allSoundedKeys removeObject:key];
 }
 
--(UIScrollView *)tellKeyScrollview {
-  return self.scrollView;
-}
-
 #pragma mark - scrollview methods
 
 -(void)customScrollViewTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -638,6 +694,46 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     // kludge way to ensure that all keys are lifted after decelerating ended
 //  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
   [self updateTouches];
+}
+
+#pragma mark - archiver methods
+
+-(NSString *)documentsDirectory {
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  return [paths firstObject];
+}
+
+-(NSString *)dataFilePath {
+  return [[self documentsDirectory] stringByAppendingPathComponent:@"EqualTemperament.plist"];
+}
+
+-(void)saveSettings {
+  NSMutableData *data = [[NSMutableData alloc] init];
+  NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+  [archiver encodeObject:self.dataModel forKey:@"dataModel"];
+  [archiver finishEncoding];
+  [data writeToFile:[self dataFilePath] atomically:YES];
+}
+
+-(void)loadSettingsFromPath:(NSString *)path {
+  NSData *data = [[NSData alloc] initWithContentsOfFile:path];
+  NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
+  self.dataModel = [unarchiver decodeObjectForKey:@"dataModel"];
+  [unarchiver finishDecoding];
+}
+
+#pragma mark - app methods
+
+-(UIStatusBarStyle)preferredStatusBarStyle {
+  if ([_colourStyle isEqualToString:@"noColour"] && [_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    return UIStatusBarStyleDefault;
+  } else {
+    return UIStatusBarStyleLightContent;
+  }
+}
+
+-(void)didReceiveMemoryWarning {
+  [super didReceiveMemoryWarning];
 }
 
 @end

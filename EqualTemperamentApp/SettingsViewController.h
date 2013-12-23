@@ -41,13 +41,15 @@
 @property (weak, nonatomic) IBOutlet UIButton *userButtonsBottomLeftButton;
 @property (weak, nonatomic) IBOutlet UIButton *userButtonsBottomRightButton;
 
+@property (weak, nonatomic) IBOutlet UIButton *smallKeysButton;
+@property (weak, nonatomic) IBOutlet UIButton *bigKeysButton;
+
+
 @property (strong, nonatomic) DataModel *dataModel;
 @property (weak, nonatomic) id<SettingsDelegate> delegate;
 @property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
 
 -(IBAction)doneButtonTapped:(id)sender;
--(void)presentInParentViewController:(UIViewController *)parentVC;
--(void)dismissFromParentViewController;
 
 @end
 
@@ -55,5 +57,6 @@
 
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel;
 -(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave;
+-(void)removeDarkOverlay;
 
 @end

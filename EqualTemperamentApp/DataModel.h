@@ -18,5 +18,6 @@
 @property (strong, nonatomic) NSString *colourStyle;
 @property (strong, nonatomic) NSNumber *rootColourWheelPosition;
 @property (strong, nonatomic) NSString *userButtonsPosition;
+@property (strong, nonatomic) NSString *keySize;
 
 @end
