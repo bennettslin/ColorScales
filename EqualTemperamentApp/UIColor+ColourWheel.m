@@ -52,4 +52,52 @@
   return [self colorWithRed:redValue green:greenValue blue:blueValue alpha:1.f];
 }
 
++(UIColor *)blackKeyboardBackground {
+  return [self colorWithRed:0.12f green:0.12f blue:0.1f alpha:1.f];
+}
+
++(UIColor *)darkGrayKeyboardBackground {
+  return [self colorWithRed:0.35f green:0.35f blue:0.29f alpha:1.f];
+}
+
++(UIColor *)orangeTint {
+  return [UIColor colorWithRed:1.f green:0.65f blue:0.10f alpha:1.f];
+}
+
++(UIColor *)orangeTintHighlighted {
+  return [UIColor colorWithRed:1.f green:0.80f blue:0.47f alpha:1.f];
+}
+
++(UIColor *)brownSettings {
+  return [UIColor colorWithRed:0.3f green:0.3f blue:0.1f alpha:1.f];
+}
+
++(UIColor *)lightYellowSettingsBackground {
+  return [UIColor colorWithRed:0.88f green:0.88f blue:0.72f alpha:1.f];
+}
+
++(UIColor *)lightYellowPickerCover {
+  CGFloat red, green, blue, alpha;
+  [[self lightYellowSettingsBackground] getRed:&red green:&green blue:&blue alpha:&alpha];
+  return [UIColor colorWithRed:red green:green blue:blue alpha:0.8f];
+}
+
++(UIColor *)lighterYellowSettingsBackground {
+  return [UIColor colorWithRed:0.92f green:0.92f blue:0.76f alpha:1.f];
+}
+
++(UIColor *)lighterYellowPickerCover {
+  CGFloat red, green, blue, alpha;
+  [[self lighterYellowSettingsBackground] getRed:&red green:&green blue:&blue alpha:&alpha];
+  return [UIColor colorWithRed:red green:green blue:blue alpha:0.85f];
+}
+
++(UIColor *)whiteKeyText {
+  return [UIColor colorWithRed:0.6f green:0.6f blue:0.6f alpha:1.f];
+}
+
++(UIColor *)colouredKeyText {
+  return [UIColor colorWithRed:0.45 green:0.45f blue:0.45f alpha:1.f];
+}
+
 @end

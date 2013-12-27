@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 #import "KeyboardViewController.h"
+#import "UIColor+ColourWheel.h"
 
 @implementation AppDelegate
 
@@ -22,7 +23,7 @@
   self.window.rootViewController = self.keyboardVC;
   [self.window makeKeyAndVisible];
   
-  [[UIButton appearance] setTintColor:[UIColor colorWithRed:1.f green:.5f blue:.1f alpha:1.f]];
+  [[UIButton appearance] setTintColor:[UIColor orangeTint]];
   
   return YES;
 }

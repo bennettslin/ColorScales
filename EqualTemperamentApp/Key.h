@@ -15,6 +15,7 @@
 @property (strong, nonatomic) UIColor *normalColour;
 @property (strong, nonatomic) UIColor *highlightedColour;
 @property (strong, nonatomic) UILabel *characterLabel;
+@property (strong, nonatomic) UIImageView *octaveLabel;
 @property NSUInteger noModScaleDegree;
 @property (strong, nonatomic) UITouch *mostRecentTouch;
 
@@ -26,7 +27,7 @@
                                      andKeyHeight:(CGFloat)keyHeight
                                 andTonesPerOctave:(NSUInteger)tonesPerOctave
                                   andPerfectFifth:(NSUInteger)perfectFifth
-                                   andScaleDegree:(NSNumber *)scaleDegreeObject;
+                              andNoModScaleDegree:(NSNumber *)noModScaleDegreeObject;
 
 -(void)addTouchToThisKey:(UITouch *)touch;
 -(void)removeTouchFromThisKey:(UITouch *)touch;

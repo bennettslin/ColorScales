@@ -13,43 +13,47 @@
 
 @interface SettingsViewController : UIViewController
 
-@property (weak, nonatomic) IBOutlet UIButton *twelveButton;
-@property (weak, nonatomic) IBOutlet UIButton *seventeenButton;
-@property (weak, nonatomic) IBOutlet UIButton *nineteenButton;
-@property (weak, nonatomic) IBOutlet UIButton *twentyFourButton;
-@property (weak, nonatomic) IBOutlet UIButton *thirtyOneButton;
-@property (weak, nonatomic) IBOutlet UIButton *fortyOneButton;
-@property (weak, nonatomic) IBOutlet UIPickerView *tonesPerOctavePicker;
+@property (strong, nonatomic) UIButton *saveButton;
 
-@property (weak, nonatomic) IBOutlet UIButton *pianoButton;
-@property (weak, nonatomic) IBOutlet UIButton *violinButton;
-@property (weak, nonatomic) IBOutlet UIButton *steelpanButton;
+@property (strong, nonatomic) UIButton *twelveButton;
+@property (strong, nonatomic) UIButton *seventeenButton;
+@property (strong, nonatomic) UIButton *nineteenButton;
+@property (strong, nonatomic) UIButton *twentyFourButton;
+@property (strong, nonatomic) UIButton *thirtyOneButton;
+@property (strong, nonatomic) UIButton *fortyOneButton;
+@property (strong, nonatomic) UIPickerView *tonesPerOctavePicker;
 
-@property (weak, nonatomic) IBOutlet UIButton *numberedKeyButton;
-@property (weak, nonatomic) IBOutlet UIButton *blankKeyButton;
-@property (weak, nonatomic) IBOutlet UIButton *whiteBlackLayoutButton;
-@property (weak, nonatomic) IBOutlet UIButton *gridLayoutButton;
-@property (weak, nonatomic) IBOutlet UIPickerView *gridIntervalPicker;
+@property (strong, nonatomic) UIButton *numberedKeyButton;
+@property (strong, nonatomic) UIButton *blankKeyButton;
+@property (strong, nonatomic) UIButton *whiteBlackLayoutButton;
+@property (strong, nonatomic) UIButton *gridLayoutButton;
+@property (strong, nonatomic) UIPickerView *gridIntervalPicker;
 
-@property (weak, nonatomic) IBOutlet UIButton *fifthWheelColourButton;
-@property (weak, nonatomic) IBOutlet UIButton *stepwiseColourButton;
-@property (weak, nonatomic) IBOutlet UIButton *noColourButton;
-@property (weak, nonatomic) IBOutlet UIPickerView *colourPicker;
+@property (strong, nonatomic) UIButton *fifthWheelColourButton;
+@property (strong, nonatomic) UIButton *stepwiseColourButton;
+@property (strong, nonatomic) UIButton *noColourButton;
+@property (strong, nonatomic) UIPickerView *colourPicker;
 
-@property (weak, nonatomic) IBOutlet UIButton *userButtonsTopRightButton;
-@property (weak, nonatomic) IBOutlet UIButton *userButtonsTopLeftButton;
-@property (weak, nonatomic) IBOutlet UIButton *userButtonsBottomLeftButton;
-@property (weak, nonatomic) IBOutlet UIButton *userButtonsBottomRightButton;
+@property (strong, nonatomic) UIButton *userButtonsBottomLeftButton;
+@property (strong, nonatomic) UIButton *userButtonsBottomRightButton;
 
-@property (weak, nonatomic) IBOutlet UIButton *smallKeysButton;
-@property (weak, nonatomic) IBOutlet UIButton *bigKeysButton;
+@property (strong, nonatomic) UIButton *smallKeysButton;
+@property (strong, nonatomic) UIButton *bigKeysButton;
 
+@property (strong, nonatomic) UIButton *octaveLabel;
+@property (strong, nonatomic) UIButton *rootColourLabel;
+@property (strong, nonatomic) UIButton *gridButtonLabel;
+
+@property (strong, nonatomic) UIView *gridPickerCover;
+@property (strong, nonatomic) UIView *gridIntervalLabelCover;
+@property (strong, nonatomic) UIView *colourPickerCover;
+@property (strong, nonatomic) UIView *rootColourLabelCover;
+@property (strong, nonatomic) UIView *fifthWheelButtonCover;
+@property (strong, nonatomic) UIView *whiteBlackButtonCover;
 
 @property (strong, nonatomic) DataModel *dataModel;
 @property (weak, nonatomic) id<SettingsDelegate> delegate;
 @property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
-
--(IBAction)doneButtonTapped:(id)sender;
 
 @end
 
@@ -58,5 +62,6 @@
 -(void)updateKeyboardWithChangedDataModel:(DataModel *)dataModel;
 -(NSUInteger)findPerfectFifthWithTonesPerOctave:(NSUInteger)tonesPerOctave;
 -(void)removeDarkOverlay;
+-(void)hideStatusBar:(BOOL)shouldBeHidden;
 
 @end

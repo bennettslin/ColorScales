@@ -12,4 +12,16 @@
 
 +(UIColor *)findNormalKeyColour:(CGFloat)colourWheelPosition withMinBright:(CGFloat)minBright;
 
++(UIColor *)blackKeyboardBackground;
++(UIColor *)darkGrayKeyboardBackground;
++(UIColor *)orangeTint;
++(UIColor *)orangeTintHighlighted;
++(UIColor *)brownSettings;
++(UIColor *)lightYellowSettingsBackground;
++(UIColor *)lighterYellowSettingsBackground;
++(UIColor *)lightYellowPickerCover;
++(UIColor *)lighterYellowPickerCover;
++(UIColor *)whiteKeyText;
++(UIColor *)colouredKeyText;
+
 @end

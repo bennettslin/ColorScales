@@ -12,15 +12,14 @@
 
 @interface HelpViewController : UIViewController
 
-@property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
+@property (weak, nonatomic) IBOutlet UIView *popupView;
 @property (weak, nonatomic) id<HelpDelegate> delegate;
-
--(IBAction)closeButtonTapped:(id)sender;
 
 @end
 
 @protocol HelpDelegate <NSObject>
 
 -(void)removeDarkOverlay;
+-(void)hideStatusBar:(BOOL)shouldBeHidden;
 
 @end

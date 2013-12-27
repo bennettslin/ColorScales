@@ -16,7 +16,7 @@
 
 @implementation SettingsViewController {
   BOOL _changesMade;
-  NSArray *_allButtonArrays;
+
   NSArray *_tonesPerOctaveButtons;
   NSArray *_pickerTones;
   NSArray *_instrumentButtons;
@@ -25,6 +25,8 @@
   NSArray *_colourStyleButtons;
   NSArray *_userButtons;
   NSArray *_keySizeButtons;
+  NSArray *_allButtonArrays;
+  NSArray *_allPickers;
   
   NSUInteger _rootColourWheelPosition;
   NSUInteger _tonesPerOctave;
@@ -36,13 +38,14 @@
   NSString *_userButtonsPosition;
   NSString *_keySize;
   
-  UIColor *_backgroundColour;
-  UIColor *_pickerCoverColour;
-  
-  UIView *_gridPickerCover;
-  UIView *_colourPickerCover;
-  
+  CGFloat _pickerRowHeight;
   NSUInteger _coloursInPicker;
+  
+  UIView *_theView;
+  CGFloat _screenWidth;
+  CGFloat _screenHeight;
+  CGFloat _viewSectionWidth;
+  CGFloat _marginAroundTheView;
 }
 
 #pragma mark - init methods
@@ -55,23 +58,15 @@
   return self;
 }
 
-  // TODO: need to add images individually to buttons
 -(void)viewDidLoad {
   [super viewDidLoad];
   _coloursInPicker = 24;
-  _backgroundColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:1.f];
-  _pickerCoverColour = [UIColor colorWithRed:0.92f green:0.92f blue:0.8f alpha:0.6f];
   
-  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    self.view.backgroundColor = _backgroundColour;
-    self.smallKeysButton.hidden = YES;
-    self.bigKeysButton.hidden = YES;
-  } else { // iPad
-    self.view.backgroundColor = [UIColor clearColor];
-    self.iPadPopupView.backgroundColor = _backgroundColour;
-    self.iPadPopupView.layer.cornerRadius = 10.f;
-    self.view.userInteractionEnabled = YES;
-  }
+  _screenWidth = [UIScreen mainScreen].bounds.size.height;
+  _screenHeight = [UIScreen mainScreen].bounds.size.width;
+  self.view.frame = CGRectMake(0, 0, _screenWidth, _screenHeight);
+  
+  [self layoutTheView];
 
   _changesMade = NO;
   _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
@@ -83,6 +78,82 @@
   _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
   _userButtonsPosition = self.dataModel.userButtonsPosition;
   _keySize = self.dataModel.keySize;
+
+  [self layoutLabels];
+  [self layoutPickers];
+  [self layoutButtons];
+  [self establishAllPositions];
+  [self layoutCovers];
+  [self presentState];
+}
+
+-(void)layoutTheView {
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _theView = self.view;
+  } else { // iPad
+    self.view.backgroundColor = [UIColor clearColor];
+    self.view.userInteractionEnabled = YES;
+    self.iPadPopupView.frame = CGRectMake(0, 0, _screenWidth * 2/3.f, _screenHeight * 3/5.f);
+    _theView = self.iPadPopupView;
+    [self.view addSubview:_theView];
+    _theView.center = self.view.center;
+    _theView.layer.cornerRadius = 10.f;
+  }
+  
+  _theView.backgroundColor = [UIColor lightYellowSettingsBackground];
+  
+    // lay out sections of views
+  _marginAroundTheView = 10.f;
+  NSUInteger numberOfViewSections;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    numberOfViewSections = 3;
+  } else { // iPad
+    numberOfViewSections = 3;
+  }
+  _viewSectionWidth = (_theView.frame.size.width - (_marginAroundTheView * 2)) / numberOfViewSections;
+  for (NSUInteger i = 0; i < numberOfViewSections; i++) {
+    UIView *viewSection = [[UIView alloc] initWithFrame:CGRectMake(_marginAroundTheView + (_viewSectionWidth * i), _marginAroundTheView, _viewSectionWidth, _theView.frame.size.height - (_marginAroundTheView * 2))];
+    if (i % 2 == 0) {
+      viewSection.backgroundColor = [UIColor lightYellowSettingsBackground];
+    } else {
+      viewSection.backgroundColor = [UIColor lighterYellowSettingsBackground];
+      
+      UIColor *outerColour = [UIColor lightYellowSettingsBackground];
+      UIColor *innerColour = [UIColor lighterYellowSettingsBackground];
+      CAGradientLayer *gradientLayer = [CAGradientLayer layer];
+      gradientLayer.frame = viewSection.layer.bounds;
+      gradientLayer.colors = @[(id)outerColour.CGColor, (id)innerColour.CGColor, (id)innerColour.CGColor, (id)outerColour.CGColor];
+      gradientLayer.locations = @[@0.0f, @0.1f, @0.9f, @1.f];
+      [viewSection.layer addSublayer:gradientLayer];
+    }
+    [_theView addSubview:viewSection];
+  }
+}
+
+-(void)layoutLabels {
+  self.octaveLabel = [[UIButton alloc] init];
+  self.octaveLabel.userInteractionEnabled = NO;
+  [self.octaveLabel setImage:[UIImage imageNamed:@"OctaveLabel"] forState:UIControlStateNormal];
+  [_theView addSubview:self.octaveLabel];
+  self.rootColourLabel = [[UIButton alloc] init];
+  self.rootColourLabel.userInteractionEnabled = NO;
+  [self.rootColourLabel setImage:[UIImage imageNamed:@"RootColourLabel"] forState:UIControlStateNormal];
+  [self.rootColourLabel setImage:[UIImage imageNamed:@"RootColourLabelDisabled"] forState:UIControlStateDisabled];
+  [_theView addSubview:self.rootColourLabel];
+  self.gridButtonLabel = [[UIButton alloc] init];
+  self.gridButtonLabel.userInteractionEnabled = NO;
+  [self.gridButtonLabel setImage:[UIImage imageNamed:@"GridButtonLabel"] forState:UIControlStateNormal];
+  [self.gridButtonLabel setImage:[UIImage imageNamed:@"GridButtonLabelDisabled"] forState:UIControlStateDisabled];
+  [_theView addSubview:self.gridButtonLabel];
+}
+
+-(void)layoutPickers {
+  _pickerRowHeight = 24.f;
+  self.tonesPerOctavePicker = [[UIPickerView alloc] init];
+  self.colourPicker = [[UIPickerView alloc] init];
+  self.gridIntervalPicker = [[UIPickerView alloc] init];
+  
+  _allPickers = @[self.tonesPerOctavePicker, self.colourPicker, self.gridIntervalPicker];
   
   dispatch_async(dispatch_get_main_queue(), ^{
     NSMutableArray *pickerTonesTemp = [[NSMutableArray alloc] init];
@@ -93,46 +164,259 @@
     self.tonesPerOctavePicker.delegate = self;
     [self.tonesPerOctavePicker selectRow:_tonesPerOctave - 2 inComponent:0 animated:NO];
   });
-
+  
   dispatch_async(dispatch_get_main_queue(), ^{
     self.gridIntervalPicker.delegate = self;
     [self.gridIntervalPicker selectRow:_gridInterval - 1 inComponent:0 animated:NO];
-    _gridPickerCover = [self createAndAddCoverToPicker:self.gridIntervalPicker];
-    if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
-      [self coverPicker:self.gridIntervalPicker];
-    } else {
-      [self uncoverPicker:self.gridIntervalPicker];
-    }
   });
   
   dispatch_async(dispatch_get_main_queue(), ^{
     self.colourPicker.delegate = self;
     [self.colourPicker selectRow:_rootColourWheelPosition + (_coloursInPicker * 2000) inComponent:0 animated:NO];
-    _colourPickerCover = [self createAndAddCoverToPicker:self.colourPicker];
-    if ([_colourStyle isEqualToString:@"noColour"]) {
-      [self coverPicker:self.colourPicker];
-    } else {
-      [self uncoverPicker:self.colourPicker];
-    }
   });
+}
 
+-(void)layoutButtons {
+    // can't instantiate through fast enumeration
+  self.twelveButton = [[UIButton alloc] init];
+  self.seventeenButton = [[UIButton alloc] init];
+  self.nineteenButton = [[UIButton alloc] init];
+  self.twentyFourButton = [[UIButton alloc] init];
+  self.thirtyOneButton = [[UIButton alloc] init];
+  self.fortyOneButton = [[UIButton alloc] init];
+  self.numberedKeyButton = [[UIButton alloc] init];
+  self.blankKeyButton = [[UIButton alloc] init];
+  self.whiteBlackLayoutButton = [[UIButton alloc] init];
+  self.gridLayoutButton = [[UIButton alloc] init];
+  self.fifthWheelColourButton = [[UIButton alloc] init];
+  self.stepwiseColourButton = [[UIButton alloc] init];
+  self.noColourButton = [[UIButton alloc] init];
+  self.userButtonsBottomLeftButton = [[UIButton alloc] init];
+  self.userButtonsBottomRightButton = [[UIButton alloc] init];
+  self.smallKeysButton = [[UIButton alloc] init];
+  self.bigKeysButton = [[UIButton alloc] init];
+  self.saveButton = [[UIButton alloc] init];
+  
   _tonesPerOctaveButtons = @[self.twelveButton, self.seventeenButton, self.nineteenButton,
                              self.twentyFourButton, self.thirtyOneButton, self.fortyOneButton];
-  _instrumentButtons = @[self.pianoButton, self.violinButton, self.steelpanButton];
-  _keyCharacterButtons = @[self.numberedKeyButton, self.blankKeyButton];
-  _keyboardStyleButtons = @[self.whiteBlackLayoutButton, self.gridLayoutButton];
-  _colourStyleButtons = @[self.fifthWheelColourButton, self.stepwiseColourButton, self.noColourButton];
-  _userButtons = @[self.userButtonsTopRightButton, self.userButtonsTopLeftButton, self.userButtonsBottomRightButton, self.userButtonsBottomLeftButton];
+  _keyCharacterButtons = @[self.blankKeyButton, self.numberedKeyButton];
+  _keyboardStyleButtons = @[self.gridLayoutButton, self.whiteBlackLayoutButton];
+  _colourStyleButtons = @[self.noColourButton, self.stepwiseColourButton, self.fifthWheelColourButton];
+  _userButtons = @[self.userButtonsBottomLeftButton, self.userButtonsBottomRightButton];
   _keySizeButtons = @[self.smallKeysButton, self.bigKeysButton];
+  _allButtonArrays = @[_tonesPerOctaveButtons, _keyCharacterButtons, _keyboardStyleButtons,
+                       _colourStyleButtons, _userButtons, _keySizeButtons];
   
-  _allButtonArrays = @[_tonesPerOctaveButtons, _instrumentButtons, _keyCharacterButtons, _keyboardStyleButtons, _colourStyleButtons, _userButtons, _instrumentButtons, _keySizeButtons];
+  NSArray *tonesPerOctaveImages = @[@"TwelveButton", @"SeventeenButton", @"NineteenButton",
+                                    @"TwentyFourButton", @"ThirtyOneButton", @"FortyOneButton"];
+  NSArray *keyCharacterImages = @[@"BlankKeyButton", @"NumberedKeyButton"];
+  NSArray *keyboardStyleImages = @[@"GridButton", @"WhiteBlackButton"];
+  NSArray *colourStyleImages = @[@"NoColourButton", @"StepwiseButton", @"FifthWheelButton"];
+  NSArray *userButtonImages = @[@"BottomLeftButton", @"BottomRightButton"];
+  NSArray *keySizeImages = @[@"SmallKeysButton", @"BigKeysButton"];
+  NSArray *allButtonImages = @[tonesPerOctaveImages, keyCharacterImages, keyboardStyleImages, colourStyleImages,
+                               userButtonImages, keySizeImages];
+  
+  NSArray *tonesPerOctaveImagesSelected = @[@"TwelveButtonSelected", @"SeventeenButtonSelected", @"NineteenButtonSelected",
+                                    @"TwentyFourButtonSelected", @"ThirtyOneButtonSelected", @"FortyOneButtonSelected"];
+  NSArray *keyCharacterImagesSelected = @[@"BlankKeyButtonSelected", @"NumberedKeyButtonSelected"];
+  NSArray *keyboardStyleImagesSelected = @[@"GridButtonSelected", @"WhiteBlackButtonSelected"];
+  NSArray *colourStyleImagesSelected = @[@"NoColourButtonSelected", @"StepwiseButtonSelected", @"FifthWheelButtonSelected"];
+  NSArray *userButtonImagesSelected = @[@"BottomLeftButtonSelected", @"BottomRightButtonSelected"];
+  NSArray *keySizeImagesSelected = @[@"SmallKeysButtonSelected", @"BigKeysButtonSelected"];
+  NSArray *allButtonImagesSelected = @[tonesPerOctaveImagesSelected, keyCharacterImagesSelected, keyboardStyleImagesSelected,
+                                       colourStyleImagesSelected, userButtonImagesSelected, keySizeImagesSelected];
   
   for (NSArray *buttonsArray in _allButtonArrays) {
+    NSUInteger arrayIndex = [_allButtonArrays indexOfObject:buttonsArray];
     for (UIButton *button in buttonsArray) {
+      NSUInteger buttonIndex = [buttonsArray indexOfObject:button];
+      UIImage *buttonImage = [UIImage imageNamed:allButtonImages[arrayIndex][buttonIndex]];
+      UIImage *buttonImageSelected = [UIImage imageNamed:allButtonImagesSelected[arrayIndex][buttonIndex]];
       [button addTarget:self action:@selector(musicButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+      [button setImage:buttonImage forState:UIControlStateNormal];
+      [button setImage:buttonImageSelected forState:UIControlStateSelected];
+      [_theView addSubview:button];
     }
   }
-  [self presentState];
+  [self.saveButton addTarget:self action:@selector(saveButtonTapped) forControlEvents:UIControlEventTouchUpInside];
+  [self.saveButton setImage:[UIImage imageNamed:@"SaveButton"] forState:UIControlStateNormal];
+  [self.saveButton setImage:[UIImage imageNamed:@"SaveButtonHighlighted"] forState:UIControlStateHighlighted];
+  [_theView addSubview:self.saveButton];
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    self.smallKeysButton.hidden = YES;
+    self.bigKeysButton.hidden = YES;
+    self.userButtonsBottomLeftButton.hidden = YES;
+    self.userButtonsBottomRightButton.hidden = YES;
+    self.numberedKeyButton.hidden = YES;
+    self.blankKeyButton.hidden = YES;
+  }
+}
+
+-(void)layoutCovers {
+    // label covers
+  self.rootColourLabelCover = [self createAndAddCoverToView:self.rootColourLabel
+                                       withBackgroundColour:[UIColor lighterYellowPickerCover]];
+  
+  UIColor *outerColour = [UIColor lightYellowPickerCover];
+  UIColor *innerColour = [UIColor lighterYellowPickerCover];
+  CAGradientLayer *gradientLayer = [CAGradientLayer layer];
+  gradientLayer.frame = self.rootColourLabelCover.layer.bounds;
+  gradientLayer.colors = @[(id)outerColour.CGColor, (id)innerColour.CGColor, (id)innerColour.CGColor];
+  gradientLayer.locations = @[@0.0f, @0.4285f, @1.f];
+  self.rootColourLabelCover.backgroundColor = [UIColor clearColor];
+  [self.rootColourLabelCover.layer addSublayer:gradientLayer];
+  
+  
+  self.gridIntervalLabelCover = [self createAndAddCoverToView:self.gridButtonLabel
+                                         withBackgroundColour:[UIColor lightYellowPickerCover]];
+  
+  if ([_colourStyle isEqualToString:@"noColour"]) {
+    self.rootColourLabelCover.hidden = NO;
+    self.rootColourLabel.enabled = NO;
+  } else {
+    self.rootColourLabelCover.hidden = YES;
+    self.rootColourLabel.enabled = YES;
+  }
+  if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    self.gridIntervalLabelCover.hidden = NO;
+    self.gridButtonLabel.enabled = NO;
+  } else {
+    self.gridIntervalLabelCover.hidden = YES;
+    self.gridButtonLabel.enabled = YES;
+  }
+  
+    // picker covers
+  self.gridPickerCover = [self createAndAddCoverToView:self.gridIntervalPicker withBackgroundColour:[UIColor lightYellowPickerCover]];
+  self.colourPickerCover = [self createAndAddCoverToView:self.colourPicker withBackgroundColour:[UIColor lighterYellowPickerCover]];
+  
+  if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
+    self.gridPickerCover.hidden = NO;
+  } else {
+    self.gridPickerCover.hidden = YES;
+  }
+  if ([_colourStyle isEqualToString:@"noColour"]) {
+    self.colourPickerCover.hidden = NO;
+  } else {
+    self.colourPickerCover.hidden = YES;
+  }
+  
+    // button covers
+  self.whiteBlackButtonCover = [self createAndAddCoverToView:self.whiteBlackLayoutButton withBackgroundColour:[UIColor lightYellowPickerCover]];
+  self.fifthWheelButtonCover = [self createAndAddCoverToView:self.fifthWheelColourButton withBackgroundColour:[UIColor lighterYellowPickerCover]];
+    // whether they are hidden or not ultimately gets established during presentState method
+  self.fifthWheelButtonCover.hidden = YES;
+  self.whiteBlackButtonCover.hidden = YES;
+}
+
+-(void)establishAllPositions {
+  CGFloat topPadding;
+  CGFloat labelOriginY;
+  CGFloat labelHeight;
+  CGFloat gridLabelXPadding;
+  CGFloat pickerOriginY;
+  CGFloat pickerWidth;
+  CGFloat saveButtonWidth;
+  CGFloat saveButtonOriginY;
+  CGFloat narrowButtonSize;
+  CGFloat wideButtonSize;
+  CGFloat evenWiderButtonSize;
+  NSArray *viewSectionXForButtons;
+  NSArray *originYForButtons;
+  
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    topPadding = 0.f;
+    labelOriginY = 10.f;
+    labelHeight = 70.f;
+    gridLabelXPadding = 24.f;
+    pickerOriginY = 76.f;
+    pickerWidth = 80.f;
+    saveButtonWidth = 85.f;
+    saveButtonOriginY = 247.f;
+      // tonesPerOctave, keyCharacter, keyboardStyle, colourStyle, userButtons, keySize
+    narrowButtonSize = 48.f;
+    wideButtonSize = 54.f;
+    viewSectionXForButtons = @[@0, @0, @2, @1, @0, @0];
+    originYForButtons = @[@223.f, @0.f, @16.f, @247.f, @0.f, @0.f];
+  } else { // iPad
+    topPadding = 10.f;
+    labelOriginY = 10.f;
+    labelHeight = 70.f;
+    gridLabelXPadding = 53.f;
+    pickerOriginY = 86.f;
+    pickerWidth = 80.f;
+    saveButtonWidth = 85.f;
+    saveButtonOriginY = 389.f;
+      // tonesPerOctave, keyCharacter, keyboardStyle, colourStyle, userButtons, keySize
+    narrowButtonSize = 48.f;
+    wideButtonSize = 54.f;
+    evenWiderButtonSize = 60.f;
+    viewSectionXForButtons = @[@0, @0, @2, @1, @1, @2];
+    originYForButtons = @[@243.f, @381.f, @16.f, @267.f, @381.f, @267.f];
+  }
+  
+    // frames
+  self.octaveLabel.frame = CGRectMake(_marginAroundTheView, topPadding + labelOriginY, _viewSectionWidth, labelHeight);
+  self.rootColourLabel.frame = CGRectMake(_marginAroundTheView + _viewSectionWidth, topPadding + labelOriginY, _viewSectionWidth, labelHeight);
+  self.gridButtonLabel.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * 2) + gridLabelXPadding, topPadding + 23.f, 20.f, labelHeight);
+  
+    // pickers and dividers
+  for (int i = 0; i < [_allPickers count]; i++) {
+    UIPickerView *thisPicker = _allPickers[i];
+    thisPicker.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * i) + ((_viewSectionWidth - pickerWidth) / 2),
+                                  topPadding + pickerOriginY, pickerWidth, 162.f);
+    [_theView insertSubview:thisPicker belowSubview:self.rootColourLabel];
+    
+    UIImageView *divider;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+      if (i % 2 == 0) {
+        divider = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"DividerLighterYellow"]];
+      } else {
+        divider = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"DividerLightYellow"]];
+      }
+      divider.contentMode = UIViewContentModeCenter;
+      divider.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * i), 350.f, _viewSectionWidth, 30.f);
+      [_theView addSubview:divider];
+    }
+  }
+  
+    // layout buttons
+  for (NSArray *buttonsArray in _allButtonArrays) {
+    NSUInteger arrayIndex = [_allButtonArrays indexOfObject:buttonsArray];
+    NSUInteger numberOfButtons = [buttonsArray count];
+    for (NSUInteger buttonIndex = 0; buttonIndex < numberOfButtons; buttonIndex++) {
+      UIButton *thisButton = buttonsArray[buttonIndex];
+//      thisButton.layer.borderColor = [UIColor blackColor].CGColor;
+//      thisButton.layer.borderWidth = 1.f;
+      
+      NSUInteger numberInRow = numberOfButtons;
+      if (numberOfButtons > 3) {
+        numberInRow = numberOfButtons / 2;
+      }
+      NSUInteger buttonSize;
+      if (numberInRow >= 3 || buttonsArray == _keyCharacterButtons) {
+        buttonSize = narrowButtonSize;
+      } else if (buttonsArray == _keySizeButtons || buttonsArray == _userButtons) {
+        buttonSize = evenWiderButtonSize;
+      } else {
+        buttonSize = wideButtonSize;
+      }
+      CGFloat nextRowY = 0.f;
+      if (buttonIndex >= numberOfButtons / 2 && numberOfButtons > 3) {
+        nextRowY = buttonSize;
+      }
+      NSUInteger viewSectionMultiplierX = [viewSectionXForButtons[arrayIndex] unsignedIntegerValue];
+      CGFloat originX = _marginAroundTheView + (_viewSectionWidth * viewSectionMultiplierX) +
+        ((_viewSectionWidth - (buttonSize * numberInRow)) / 2.f) +
+        (buttonSize * (buttonIndex % numberInRow));
+      CGFloat originY = [originYForButtons[arrayIndex] floatValue];
+      thisButton.frame = CGRectMake(originX, topPadding + originY + nextRowY, buttonSize, buttonSize);
+    }
+  }
+  
+    // layout save button
+  self.saveButton.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * 2) + ((_viewSectionWidth - saveButtonWidth) / 2.f), topPadding + saveButtonOriginY, saveButtonWidth, 48.f);
 }
 
 #pragma mark - button methods
@@ -175,44 +459,19 @@
       for (UIButton *button in _tonesPerOctaveButtons) {
         if (button == sender) {
           button.selected = YES;
-            // a custom tonesPerOctave button selected
-          self.whiteBlackLayoutButton.enabled = YES;
+          if (self.whiteBlackLayoutButton.enabled == NO) {
+            self.whiteBlackLayoutButton.enabled = YES;
+            [self uncoverView:self.whiteBlackLayoutButton fromCover:_whiteBlackButtonCover];
+          }
+          
           [self.tonesPerOctavePicker selectRow:(_tonesPerOctave - 2) inComponent:0 animated:YES];
-          [self presentGridPickerState];
+          [self presentGridPickerBasedOnLatestChange];
         } else {
           button.selected = NO;
         }
       }
     }
-    [self determineFifthWheelButtonEnabled];
-  }
-  
-  if ([_instrumentButtons containsObject:sender]) {
-    if (sender == self.pianoButton) {
-      if (![_instrument isEqualToString:@"piano"]) {
-        _instrument = @"piano";
-        _changesMade = YES;
-      }
-    } else if (sender == self.violinButton) {
-      if (![_instrument isEqualToString:@"violin"]) {
-        _instrument = @"violin";
-        _changesMade = YES;
-      }
-    } else if (sender == self.steelpanButton) {
-      if (![_instrument isEqualToString:@"steelpan"]) {
-        _instrument = @"steelpan";
-        _changesMade = YES;
-      }
-    }
-    if (_changesMade) {
-      for (UIButton *button in _instrumentButtons) {
-        if (button == sender) {
-          button.selected = YES;
-        } else {
-          button.selected = NO;
-        }
-      }
-    }
+    [self determineWhetherToEnableFifthWheelButton];
   }
   
   if ([_keyCharacterButtons containsObject:sender]) {
@@ -243,13 +502,17 @@
       if (![_keyboardStyle isEqualToString:@"whiteBlack"]) {
         _keyboardStyle = @"whiteBlack";
         _changesMade = YES;
-        [self coverPicker:self.gridIntervalPicker];
+        [self coverView:self.gridIntervalPicker withCover:self.gridPickerCover];
+        [self coverView:self.gridButtonLabel withCover:self.gridIntervalLabelCover];
+        self.gridButtonLabel.enabled = NO;
       }
     } else if (sender == self.gridLayoutButton) {
       if (![_keyboardStyle isEqualToString:@"grid"]) {
         _keyboardStyle = @"grid";
         _changesMade = YES;
-        [self uncoverPicker:self.gridIntervalPicker];
+        [self uncoverView:self.gridIntervalPicker fromCover:self.gridPickerCover];
+        [self uncoverView:self.gridButtonLabel fromCover:self.gridIntervalLabelCover];
+        self.gridButtonLabel.enabled = YES;
       }
     }
     if (_changesMade) {
@@ -268,19 +531,25 @@
       if (![_colourStyle isEqualToString:@"fifthWheel"]) {
         _colourStyle = @"fifthWheel";
         _changesMade = YES;
-        [self uncoverPicker:self.colourPicker];
+        [self uncoverView:self.colourPicker fromCover:_colourPickerCover];
+        [self uncoverView:self.rootColourLabel fromCover:self.rootColourLabelCover];
+        _rootColourLabel.enabled = YES;
       }
     } else if (sender == self.stepwiseColourButton) {
       if (![_colourStyle isEqualToString:@"stepwise"]) {
         _colourStyle = @"stepwise";
         _changesMade = YES;
-        [self uncoverPicker:self.colourPicker];
+        [self uncoverView:self.colourPicker fromCover:_colourPickerCover];
+        [self uncoverView:self.rootColourLabel fromCover:self.rootColourLabelCover];
+        _rootColourLabel.enabled = YES;
       }
     } else if (sender == self.noColourButton) {
       if (![_colourStyle isEqualToString:@"noColour"]) {
         _colourStyle = @"noColour";
         _changesMade = YES;
-        [self coverPicker:self.colourPicker];
+        [self coverView:self.colourPicker withCover:_colourPickerCover];
+        [self coverView:self.rootColourLabel withCover:self.rootColourLabelCover];
+        _rootColourLabel.enabled = NO;
       }
     }
     if (_changesMade) {
@@ -295,17 +564,7 @@
   }
 
   if ([_userButtons containsObject:sender]) {
-    if (sender == self.userButtonsTopRightButton) {
-      if (![_userButtonsPosition isEqualToString:@"topRight"]) {
-        _userButtonsPosition = @"topRight";
-        _changesMade = YES;
-      }
-    } else if (sender == self.userButtonsTopLeftButton) {
-      if (![_userButtonsPosition isEqualToString:@"topLeft"]) {
-        _userButtonsPosition = @"topLeft";
-        _changesMade = YES;
-      }
-    } else if (sender == self.userButtonsBottomRightButton) {
+    if (sender == self.userButtonsBottomRightButton) {
       if (![_userButtonsPosition isEqualToString:@"bottomRight"]) {
         _userButtonsPosition = @"bottomRight";
         _changesMade = YES;
@@ -351,7 +610,7 @@
   }
 }
 
--(IBAction)doneButtonTapped:(id)sender {
+-(void)saveButtonTapped {
   if (_changesMade) {
     self.dataModel.tonesPerOctave = [NSNumber numberWithUnsignedInteger:_tonesPerOctave ];
     self.dataModel.instrument = _instrument;
@@ -362,14 +621,19 @@
     self.dataModel.userButtonsPosition = _userButtonsPosition;
     self.dataModel.gridInterval = [NSNumber numberWithUnsignedInteger:_gridInterval];
     self.dataModel.keySize = _keySize;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
-    });
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone || [_keyboardStyle isEqualToString:@"whiteBlack"]) {
+      [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];      
+    } else { // iPad
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate updateKeyboardWithChangedDataModel:self.dataModel];
+      });
+    }
   }
   [self returnToParentViewController];
 }
 
 -(void)returnToParentViewController {
+  [self.delegate hideStatusBar:NO];
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
   } else { // iPad
@@ -392,15 +656,7 @@
 #pragma mark - change view state methods
 
 -(void)presentState {
-  [self presentTonesPickerState];
-  UIButton *tempChosenInstrument;
-  if ([_instrument isEqualToString:@"piano"]) {
-    tempChosenInstrument = self.pianoButton;
-  } else if ([_instrument isEqualToString:@"violin"]) {
-    tempChosenInstrument = self.violinButton;
-  } else if ([_instrument isEqualToString:@"steelpan"]) {
-    tempChosenInstrument = self.steelpanButton;
-  }
+  [self presentTonesButtonsBasedOnLatestChange];
   
   UIButton *tempChosenKeyCharacter;
   if ([_keyCharacter isEqualToString:@"numbered"]) {
@@ -426,11 +682,7 @@
   }
   
   UIButton *tempUserButton;
-  if ([_userButtonsPosition isEqualToString:@"topRight"]) {
-    tempUserButton = self.userButtonsTopRightButton;
-  } else if ([_userButtonsPosition isEqualToString:@"topLeft"]) {
-    tempUserButton = self.userButtonsTopLeftButton;
-  } else if ([_userButtonsPosition isEqualToString:@"bottomRight"]) {
+  if ([_userButtonsPosition isEqualToString:@"bottomRight"]) {
     tempUserButton = self.userButtonsBottomRightButton;
   } else if ([_userButtonsPosition isEqualToString:@"bottomLeft"]) {
     tempUserButton = self.userButtonsBottomLeftButton;
@@ -443,13 +695,6 @@
     tempKeySizeButton = self.bigKeysButton;
   }
   
-  for (UIButton *button in _instrumentButtons) {
-    if (button == tempChosenInstrument) {
-      button.selected = YES;
-    } else {
-      button.selected = NO;
-    }
-  }
   for (UIButton *button in _keyCharacterButtons) {
     if (button == tempChosenKeyCharacter) {
       button.selected = YES;
@@ -487,14 +732,14 @@
   }
 }
 
--(void)presentGridPickerState {
+-(void)presentGridPickerBasedOnLatestChange {
   NSUInteger perfectFourth = _tonesPerOctave - [self.delegate findPerfectFifthWithTonesPerOctave:_tonesPerOctave];
   _gridInterval = perfectFourth;
   [self.gridIntervalPicker reloadAllComponents];
   [self.gridIntervalPicker selectRow:perfectFourth - 1 inComponent:0 animated:YES];
 }
 
--(void)presentTonesPickerState {
+-(void)presentTonesButtonsBasedOnLatestChange {
   UIButton *tempChosenButton;
   switch (_tonesPerOctave) {
     case 12:
@@ -526,33 +771,39 @@
     if (button == tempChosenButton) {
       button.selected = YES;
         // a custom tonesPerOctave button selected
-      self.whiteBlackLayoutButton.enabled = YES;
+      if (self.whiteBlackLayoutButton.enabled == NO) {
+        self.whiteBlackLayoutButton.enabled = YES;
+        [self uncoverView:self.whiteBlackLayoutButton fromCover:self.whiteBlackButtonCover];
+      }
     } else {
       button.selected = NO;
     }
   }
-  [self determineFifthWheelButtonEnabled];
+  [self determineWhetherToEnableFifthWheelButton];
 }
 
 -(void)disableWhiteBlackButtonAndForceGrid {
     // no custom tonesPerOctave button selected
   self.whiteBlackLayoutButton.enabled = NO;
+  [self coverView:self.whiteBlackLayoutButton withCover:self.whiteBlackButtonCover];
     // force grid selection if not a custom tone but whiteBlack still selected
   if ([_keyboardStyle isEqualToString:@"whiteBlack"]) {
     self.whiteBlackLayoutButton.selected = NO;
     _keyboardStyle = @"grid";
     self.gridLayoutButton.selected = YES;
-    [self uncoverPicker:self.gridIntervalPicker];
+    [self uncoverView:self.gridIntervalPicker fromCover:self.gridPickerCover];
+    [self uncoverView:self.gridButtonLabel fromCover:self.gridIntervalLabelCover];
+    self.gridButtonLabel.enabled = YES;
   }
 }
 
--(void)determineFifthWheelButtonEnabled {
-  self.fifthWheelColourButton.enabled = NO;
+-(void)determineWhetherToEnableFifthWheelButton {
     // force stepwise selection ONLY if not relative prime and fifthWheel still selected
     // 24 is only custom button that is not relative prime
   if ([@[@4, @6, @10, @14, @15, @20, @21, @24, @25, @28, @30, @34, @35, @36, @38, @44, @48]
-       containsObject:[NSNumber numberWithUnsignedInteger:_tonesPerOctave ]]) {
+       containsObject:[NSNumber numberWithUnsignedInteger:_tonesPerOctave]]) {
     self.fifthWheelColourButton.enabled = NO;
+    [self coverView:self.fifthWheelColourButton withCover:self.fifthWheelButtonCover];
     if ([_colourStyle isEqualToString:@"fifthWheel"]) {
       self.fifthWheelColourButton.selected = NO;
       _colourStyle = @"stepwise";
@@ -560,58 +811,49 @@
     }
   } else {
     self.fifthWheelColourButton.enabled = YES;
+    [self uncoverView:self.fifthWheelColourButton fromCover:self.fifthWheelButtonCover];
   }
 }
 
--(UIView *)createAndAddCoverToPicker:(UIPickerView *)picker {
-  UIView *cover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, picker.frame.size.width, picker.frame.size.height)];
-  cover.backgroundColor = _pickerCoverColour;
-  [picker addSubview:cover];
+#pragma mark - cover methods
+
+-(UIView *)createAndAddCoverToView:(UIView *)thisView withBackgroundColour:(UIColor *)colour {
+  UIView *cover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, thisView.frame.size.width, thisView.frame.size.height)];
+  cover.backgroundColor = colour;
+//  cover.layer.borderColor = [UIColor blackColor].CGColor;
+//  cover.layer.borderWidth = 1.f;
+  [thisView addSubview:cover];
   return cover;
 }
 
--(void)coverPicker:(UIPickerView *)picker {
-  picker.userInteractionEnabled = NO;
-  if (picker == self.gridIntervalPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-      _gridPickerCover.hidden = NO;
-      _gridPickerCover.alpha = 1.f;
+-(void)coverView:(UIView *)thisView withCover:(UIView *)cover {
+  thisView.userInteractionEnabled = NO;
+  cover.hidden = NO;
+  [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    cover.alpha = 1.f;
     } completion:^(BOOL finished) {
-      [picker reloadAllComponents];
-    }];
-  } else if (picker == self.colourPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-      _colourPickerCover.hidden = NO;
-      _colourPickerCover.alpha = 1.f;
-    } completion:^(BOOL finished) {
-      [picker reloadAllComponents];
-    }];
-  }
+//    if ([thisView isKindOfClass:[UIPickerView class]]) {
+//      [(UIPickerView *)thisView reloadAllComponents];
+//    }
+  }];
 }
 
--(void)uncoverPicker:(UIPickerView *)picker {
-  picker.userInteractionEnabled = YES;
-  if (picker == self.gridIntervalPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-      _gridPickerCover.alpha = 0.1f;
-    } completion:^(BOOL finished) {
-      _gridPickerCover.hidden = YES;
-      [picker reloadAllComponents];
-    }];
-  } else if (picker == self.colourPicker) {
-    [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseIn animations:^{
-      _colourPickerCover.alpha = 0.1f;
-    } completion:^(BOOL finished) {
-      _colourPickerCover.hidden = YES;
-      [picker reloadAllComponents];
-    }];
-  }
+-(void)uncoverView:(UIView *)thisView fromCover:(UIView *)cover {
+  thisView.userInteractionEnabled = YES;
+  [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+    cover.alpha = 0.f;
+  } completion:^(BOOL finished) {
+    cover.hidden = YES;
+    if ([thisView isKindOfClass:[UIPickerView class]]) {
+      [(UIPickerView *)thisView reloadAllComponents];
+    }
+  }];
 }
 
 #pragma mark - picker view methods
 
 -(CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component {
-  return 24.f;
+  return _pickerRowHeight;
 }
 
 -(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
@@ -631,7 +873,7 @@
 
 -(UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
   if (pickerView == self.colourPicker) {
-    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 24)];
+    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, _pickerRowHeight)];
     if (_colourPickerCover.isHidden) {
       thisView.backgroundColor = [UIColor findNormalKeyColour:((row % _coloursInPicker) / (CGFloat)_coloursInPicker) withMinBright:0.45f];
     } else {
@@ -642,7 +884,7 @@
     return thisView;
 
   } else {
-    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 24)];
+    UIView *thisView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, _pickerRowHeight)];
     UILabel *label = [[UILabel alloc] initWithFrame:thisView.frame];
     label.center = thisView.center;
     label.textAlignment = NSTextAlignmentCenter;
@@ -652,7 +894,7 @@
     } else if (pickerView == self.gridIntervalPicker) {
       label.text = [NSString stringWithFormat:@"%i", row + 1];
     }
-    if (pickerView == self.gridIntervalPicker && !_gridPickerCover.isHidden) {
+    if (pickerView == self.gridIntervalPicker && !self.gridPickerCover.isHidden) {
       label.textColor = [UIColor colorWithRed:0.4f green:0.4f blue:0.4f alpha:0.9f];
     } else {
       label.textColor = [UIColor blackColor];
@@ -666,9 +908,9 @@
   if (pickerView == self.tonesPerOctavePicker) {
     _changesMade = YES;
     _tonesPerOctave = row + 2;
-    [self presentTonesPickerState];
+    [self presentTonesButtonsBasedOnLatestChange];
       // choice of tones per interval also affects grid interval picker
-      [self presentGridPickerState];
+    [self presentGridPickerBasedOnLatestChange];
   } else if (pickerView == self.gridIntervalPicker) {
     _changesMade = YES;
     _gridInterval = row + 1;
@@ -683,6 +925,14 @@
 -(void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+-(BOOL)prefersStatusBarHidden {
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    return YES;
+  } else { // iPad
+    return YES;
+  }
 }
 
 @end

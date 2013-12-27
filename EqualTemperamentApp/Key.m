@@ -28,15 +28,15 @@ const NSUInteger coloursInPicker = 24;
                                      andKeyHeight:(CGFloat)keyHeight
                                 andTonesPerOctave:(NSUInteger)tonesPerOctave
                                   andPerfectFifth:(NSUInteger)perfectFifth
-                                   andScaleDegree:(NSNumber *)scaleDegreeObject {
+                              andNoModScaleDegree:(NSNumber *)noModScaleDegreeObject {
   self = [super initWithFrame:frame];
   if (self) {
     self.layer.drawsAsynchronously = YES;
     self.multipleTouchEnabled = NO;
     
       // ugh... turns out it didn't even need the custom gesture recognizer!
-    
-    NSUInteger scaleDegree = [scaleDegreeObject unsignedIntegerValue];
+    NSUInteger noModScaleDegree = [noModScaleDegreeObject unsignedIntegerValue];
+    NSUInteger scaleDegree = noModScaleDegree % tonesPerOctave;
     [self findColoursWithColourStyle:colourStyle
           andRootColourWheelPosition:[rootColourWheelPosition unsignedIntegerValue]
                      andKeyCharacter:keyCharacter
@@ -45,11 +45,43 @@ const NSUInteger coloursInPicker = 24;
                      andPerfectFifth:perfectFifth
                       andScaleDegree:scaleDegree];
     
-    if ([keyCharacter isEqualToString:@"numbered"]) {
+    BOOL isRootTone;
+    if (noModScaleDegree % tonesPerOctave == 0) {
+      isRootTone = YES;
+    } else {
+      isRootTone = NO;
+    }
+    
+    if ([keyCharacter isEqualToString:@"numbered"] && !isRootTone) {
       [self addLabelGivenColourStyle:colourStyle andBlackKeyHeight:(CGFloat)keyHeight forScaleDegree:scaleDegree];
+    }
+    if (isRootTone) {
+      NSUInteger octave;
+      if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        octave = (noModScaleDegree + (3 * tonesPerOctave)) / tonesPerOctave;
+      } else { // iPad
+        octave = (noModScaleDegree + (2 * tonesPerOctave)) / tonesPerOctave;
+      }
+      [self addOctaveLabel:octave givenColourStyle:colourStyle];
     }
   }
   return self;
+}
+
+-(void)addOctaveLabel:(NSUInteger)octave givenColourStyle:(NSString *)colourStyle {
+  NSString *imageName;
+  if ([colourStyle isEqualToString:@"noColour"]) {
+    imageName = [NSString stringWithFormat:@"WhiteKeyC%lu", (unsigned long)octave];
+    self.octaveLabel = [[UIImageView alloc] initWithImage:[UIImage imageNamed:imageName]];
+  } else {
+    imageName = [NSString stringWithFormat:@"ColouredKeyC%lu", (unsigned long)octave];
+    self.octaveLabel = [[UIImageView alloc] initWithImage:[UIImage imageNamed:imageName]];
+  }
+
+  CGFloat paddingY = 9.f;
+  self.octaveLabel.center = CGPointMake(self.frame.size.width / 2,
+                                        self.frame.size.height - paddingY - (self.octaveLabel.image.size.height / 2));
+  [self addSubview:self.octaveLabel];
 }
 
 -(void)addLabelGivenColourStyle:(NSString *)colourStyle
@@ -64,15 +96,13 @@ const NSUInteger coloursInPicker = 24;
   
   if ([colourStyle isEqualToString:@"noColour"]) {
     if (blackKeyHeight == 1.f) {
-        // this is a white key
-      self.characterLabel.textColor = [UIColor colorWithRed:0.6f green:0.6f blue:0.6f alpha:1.f];
+      self.characterLabel.textColor = [UIColor whiteKeyText];
     } else {
         // this is a black key
       self.characterLabel.textColor = [UIColor whiteColor];
     }
   } else {
-      // this is any coloured key
-    self.characterLabel.textColor = [UIColor colorWithRed:0.45 green:0.45f blue:0.45f alpha:1.f];
+    self.characterLabel.textColor = [UIColor colouredKeyText];
   }
   
   self.characterLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)scaleDegree];
@@ -190,7 +220,6 @@ const NSUInteger coloursInPicker = 24;
   CAGradientLayer *gradientLayer = [CAGradientLayer layer];
   gradientLayer.frame = self.layer.bounds;
   gradientLayer.colors = @[(id)topGradient.CGColor, (id)bottomGradient.CGColor];
-  
   gradientLayer.locations = @[@0.f, @1.f];
   
   [self.layer addSublayer:gradientLayer];
