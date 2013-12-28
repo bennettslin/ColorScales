@@ -46,9 +46,9 @@
     _popupFrameHeight = _screenHeight * 4.2/5.f;
     _marginAroundPopup = 6.f;
   } else {
-    _popupFrameWidth = _screenWidth * 1/2.f;
+    _popupFrameWidth = _screenWidth * 3/5.f;
     _popupFrameHeight = _screenHeight * 1/2.f;
-    _marginAroundPopup = 15.f;
+    _marginAroundPopup = 25.f;
   }
 
   [self establishContentAndButtonSizesAndPositions];
@@ -71,7 +71,7 @@
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
     fontSize = 13;
   } else { // iPad
-    fontSize = 16;
+    fontSize = 20;
   }
   aboutTextView.font = [UIFont systemFontOfSize:fontSize];
   [aboutTextView sizeToFit];
@@ -95,7 +95,7 @@
   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
     fontSize = 12;
   } else { // iPad
-    fontSize = 14.5;
+    fontSize = 18;
   }
   bandTextView.font = [UIFont systemFontOfSize:fontSize];
   [bandTextView sizeToFit];
@@ -109,6 +109,12 @@
   [websiteButton setTitle:@"Bobtail Yearlings website" forState:UIControlStateHighlighted];
   [websiteButton setTitleColor:[UIColor orangeTint] forState:UIControlStateNormal];
   [websiteButton setTitleColor:[UIColor orangeTintHighlighted] forState:UIControlStateHighlighted];
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    fontSize = 14;
+  } else { // iPad
+    fontSize = 22;
+  }
+  websiteButton.titleLabel.font = [UIFont systemFontOfSize:fontSize];
   [websiteButton addTarget:self action:@selector(launchURL:) forControlEvents:UIControlEventTouchUpInside];
   [websiteButton sizeToFit];
   CGFloat websiteButtonWidth = websiteButton.frame.size.width;
