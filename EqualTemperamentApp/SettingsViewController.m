@@ -66,25 +66,31 @@
   _screenHeight = [UIScreen mainScreen].bounds.size.width;
   self.view.frame = CGRectMake(0, 0, _screenWidth, _screenHeight);
   
-  [self layoutTheView];
+  _changesMade = YES; // to ensure view is loaded upon initial launch
+  [self presentSettingsViewBasedOnDataModel];
+}
 
-  _changesMade = NO;
-  _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
-  _instrument = self.dataModel.instrument;
-  _keyCharacter = self.dataModel.keyCharacter;
-  _keyboardStyle = self.dataModel.keyboardStyle;
-  _gridInterval = [self.dataModel.gridInterval unsignedIntegerValue];
-  _colourStyle = self.dataModel.colourStyle;
-  _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
-  _userButtonsPosition = self.dataModel.userButtonsPosition;
-  _keySize = self.dataModel.keySize;
-
-  [self layoutLabels];
-  [self layoutPickers];
-  [self layoutButtons];
-  [self establishAllPositions];
-  [self layoutCovers];
-  [self presentState];
+-(void)presentSettingsViewBasedOnDataModel {
+  if (_changesMade) {
+    [self layoutTheView];
+    _tonesPerOctave = [self.dataModel.tonesPerOctave unsignedIntegerValue];
+    _instrument = self.dataModel.instrument;
+    _keyCharacter = self.dataModel.keyCharacter;
+    _keyboardStyle = self.dataModel.keyboardStyle;
+    _gridInterval = [self.dataModel.gridInterval unsignedIntegerValue];
+    _colourStyle = self.dataModel.colourStyle;
+    _rootColourWheelPosition = [self.dataModel.rootColourWheelPosition unsignedIntegerValue];
+    _userButtonsPosition = self.dataModel.userButtonsPosition;
+    _keySize = self.dataModel.keySize;
+    
+    [self layoutLabels];
+    [self layoutPickers];
+    [self layoutButtons];
+    [self establishAllPositions];
+    [self layoutCovers];
+    [self presentState];
+    _changesMade = NO;
+  }
 }
 
 -(void)layoutTheView {
@@ -314,7 +320,7 @@
   CGFloat topPadding;
   CGFloat labelOriginY;
   CGFloat labelHeight;
-  CGFloat gridLabelXPadding;
+  CGFloat gridLabelMinusXPadding;
   CGFloat pickerOriginY;
   CGFloat pickerWidth;
   CGFloat saveButtonWidth;
@@ -329,7 +335,7 @@
     topPadding = 0.f;
     labelOriginY = 10.f;
     labelHeight = 70.f;
-    gridLabelXPadding = 24.f;
+    gridLabelMinusXPadding = 57.f;
     pickerOriginY = 76.f;
     pickerWidth = 80.f;
     saveButtonWidth = 85.f;
@@ -343,7 +349,7 @@
     topPadding = 10.f;
     labelOriginY = 10.f;
     labelHeight = 70.f;
-    gridLabelXPadding = 53.f;
+    gridLabelMinusXPadding = 57.f;
     pickerOriginY = 86.f;
     pickerWidth = 80.f;
     saveButtonWidth = 85.f;
@@ -359,7 +365,7 @@
     // frames
   self.octaveLabel.frame = CGRectMake(_marginAroundTheView, topPadding + labelOriginY, _viewSectionWidth, labelHeight);
   self.rootColourLabel.frame = CGRectMake(_marginAroundTheView + _viewSectionWidth, topPadding + labelOriginY, _viewSectionWidth, labelHeight);
-  self.gridButtonLabel.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * 2) + gridLabelXPadding, topPadding + 23.f, 20.f, labelHeight);
+  self.gridButtonLabel.frame = CGRectMake(_marginAroundTheView + (_viewSectionWidth * 2.5f) - gridLabelMinusXPadding, topPadding + 23.f, 20.f, labelHeight);
   
     // pickers and dividers
   for (int i = 0; i < [_allPickers count]; i++) {
@@ -629,6 +635,7 @@
       });
     }
   }
+  _changesMade = NO;
   [self returnToParentViewController];
 }
 
@@ -651,6 +658,8 @@
       [self returnToParentViewController];
     }
   }
+    // does not affect changesMade; this gets checked the next time settingsVC is presented
+    // to determine whether view needs to be reloaded after closing without saving
 }
 
 #pragma mark - change view state methods

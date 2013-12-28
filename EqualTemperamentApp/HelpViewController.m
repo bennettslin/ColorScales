@@ -17,8 +17,9 @@
   UIColor *_backgroundColour;
   CGFloat _screenWidth;
   CGFloat _screenHeight;
-  CGFloat _viewFrameWidth;
-  CGFloat _viewFrameHeight;
+  CGFloat _popupFrameWidth;
+  CGFloat _popupFrameHeight;
+  CGFloat _marginAroundPopup;
 }
 
 -(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -35,55 +36,98 @@
   _screenWidth = [UIScreen mainScreen].bounds.size.height;
   _screenHeight = [UIScreen mainScreen].bounds.size.width;
   _backgroundColour = [UIColor lighterYellowSettingsBackground];
-  
-  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    _viewFrameWidth = _screenWidth * 5/6.f;
-    _viewFrameHeight = _screenHeight * 4/5.f;
-  } else {
-    _viewFrameWidth = _screenWidth * 3/5.f;
-    _viewFrameHeight = _screenHeight * 1/2.f;
-  }
-
   self.view.frame = CGRectMake(0, 0, _screenWidth, _screenHeight);
   self.view.backgroundColor = [UIColor clearColor];
-  self.popupView.frame = CGRectMake((_screenWidth - _viewFrameWidth) / 2, (_screenHeight - _viewFrameHeight) / 2, _viewFrameWidth, _viewFrameHeight);
-  self.popupView.backgroundColor = _backgroundColour;
-  self.popupView.layer.cornerRadius = 10.f;
-  self.view.userInteractionEnabled = YES;
   
-  [self setText];
-  [self setURLButton];
+    // use these starting popup values to size and position content and button
+    // then use size and position of content and button to finalize size and position of popup
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    _popupFrameWidth = 416.f;
+    _popupFrameHeight = _screenHeight * 4.2/5.f;
+    _marginAroundPopup = 6.f;
+  } else {
+    _popupFrameWidth = _screenWidth * 1/2.f;
+    _popupFrameHeight = _screenHeight * 1/2.f;
+    _marginAroundPopup = 15.f;
+  }
+
+  [self establishContentAndButtonSizesAndPositions];
+  [self establishPopupSizeAndPosition];
 }
 
--(void)setText {
-  UITextView *textView = [[UITextView alloc] init];
-  CGFloat textFieldWidth = _viewFrameWidth - 20.f;
-  CGFloat textFieldHeight = _viewFrameHeight - 20.f;
-  textView.frame = CGRectMake((_viewFrameWidth - textFieldWidth) / 2, (_viewFrameHeight - textFieldHeight) / 2, textFieldWidth, textFieldHeight);
-  textView.text = @"Create scales of any equal temperament, from 2 to 48.\
-                     \n\nKeyboard layouts are available for popular scales.\
-                     \n\nGrid layout rows may ascend by any interval. The default is the perfect fourth.\
-                     \n\nColored keys related by circle of fifths are available for some scales. The circle of fifths is first mapped onto the color wheel. The keys are then arranged stepwise.\
-                     \n\nBobtail Yearlings is a chamber folk band now based in Seattle. Please check out Yearling’s Bobtail, our “Ulysses of rock albums,” as well as our comic book album about the life of Rosalind Franklin!";
-  textView.textColor = [UIColor brownSettings];
-  textView.backgroundColor = [UIColor lighterYellowSettingsBackground];
-  textView.editable = NO;
-  [self.popupView addSubview:textView];
-}
+-(void)establishContentAndButtonSizesAndPositions {
+    // about the app
+  UITextView *aboutTextView = [[UITextView alloc] init];
+  CGFloat textViewWidth = _popupFrameWidth - (_marginAroundPopup * 2);
+  CGFloat aboutTextViewHeight = (_popupFrameHeight - (_marginAroundPopup * 2)) * 9/16.f;
+  aboutTextView.frame = CGRectMake(_marginAroundPopup, _marginAroundPopup, textViewWidth, aboutTextViewHeight);
+  aboutTextView.text = @"Create any equal-temperament scale from 2 to 48. Keyboard layouts are available for popular scales. Grid layout rows may ascend by any interval. The default is the perfect fourth.\
+                     \n\nColored keys related by circle of fifths are available for some scales. The circle of fifths is first mapped onto the color wheel; keys are then arranged stepwise.";
+  aboutTextView.textColor = [UIColor brownSettings];
+  aboutTextView.backgroundColor = [UIColor lighterYellowSettingsBackground];
+  aboutTextView.editable = NO;
+  aboutTextView.scrollEnabled = NO;
+  NSUInteger fontSize;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    fontSize = 13;
+  } else { // iPad
+    fontSize = 16;
+  }
+  aboutTextView.font = [UIFont systemFontOfSize:fontSize];
+  [aboutTextView sizeToFit];
+  aboutTextViewHeight = aboutTextView.frame.size.height;
 
--(void)setURLButton {
-  CGFloat buttonWidth = 250.f;
-  CGFloat buttonHeight = 50.f;
+    // divider
+  UIImageView *divider = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"DividerLightYellow"]];
+  CGFloat dividerHeight = 13.f;
+  divider.contentMode = UIViewContentModeCenter;
+  divider.frame = CGRectMake(_marginAroundPopup, (_marginAroundPopup * 2) + aboutTextViewHeight, _popupFrameWidth - (_marginAroundPopup * 2), dividerHeight);
+  
+    // about my band
+  UITextView *bandTextView = [[UITextView alloc] init];
+  CGFloat bandTextViewHeight = (_popupFrameHeight - (_marginAroundPopup * 2)) * 4/16.f;
+  bandTextView.frame = CGRectMake(_marginAroundPopup, (_marginAroundPopup * 3) + aboutTextViewHeight + dividerHeight, textViewWidth, bandTextViewHeight);
+  bandTextView.text = @"Bobtail Yearlings is a chamber folk band now based in Seattle. Please check out our “Ulysses of rock albums,” as well as our comic book album about the life of Rosalind Franklin!";
+  bandTextView.textColor = [UIColor brownSettings];
+  bandTextView.backgroundColor = [UIColor lighterYellowSettingsBackground];
+  bandTextView.editable = NO;
+  bandTextView.scrollEnabled = NO;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    fontSize = 12;
+  } else { // iPad
+    fontSize = 14.5;
+  }
+  bandTextView.font = [UIFont systemFontOfSize:fontSize];
+  [bandTextView sizeToFit];
+  bandTextViewHeight = bandTextView.frame.size.height;
+  
+    // button to go to band website
+
   UIButton *websiteButton = [UIButton buttonWithType:UIButtonTypeCustom];
-  websiteButton.frame = CGRectMake((_viewFrameWidth - buttonWidth) / 2, _viewFrameHeight - buttonHeight, buttonWidth, buttonHeight);
-  websiteButton.layer.borderColor = [UIColor blackColor].CGColor;
-  websiteButton.layer.borderWidth = 1.f;
+  websiteButton.titleLabel.textAlignment = NSTextAlignmentCenter;
   [websiteButton setTitle:@"Bobtail Yearlings website" forState:UIControlStateNormal];
   [websiteButton setTitle:@"Bobtail Yearlings website" forState:UIControlStateHighlighted];
   [websiteButton setTitleColor:[UIColor orangeTint] forState:UIControlStateNormal];
   [websiteButton setTitleColor:[UIColor orangeTintHighlighted] forState:UIControlStateHighlighted];
   [websiteButton addTarget:self action:@selector(launchURL:) forControlEvents:UIControlEventTouchUpInside];
+  [websiteButton sizeToFit];
+  CGFloat websiteButtonWidth = websiteButton.frame.size.width;
+  CGFloat websiteButtonHeight = websiteButton.frame.size.height;
+  websiteButton.frame = CGRectMake((_popupFrameWidth - websiteButtonWidth) / 2, aboutTextViewHeight + dividerHeight + bandTextViewHeight + (_marginAroundPopup * 4), websiteButtonWidth, websiteButtonHeight);
+  
+  [self.popupView addSubview:aboutTextView];
+  [self.popupView addSubview:bandTextView];
+  [self.popupView addSubview:divider];
   [self.popupView addSubview:websiteButton];
+  
+  _popupFrameHeight = (_marginAroundPopup * 6) + aboutTextViewHeight + dividerHeight + bandTextViewHeight + websiteButtonHeight;
+}
+
+-(void)establishPopupSizeAndPosition {
+  self.popupView.frame = CGRectMake((_screenWidth - _popupFrameWidth) / 2, (_screenHeight - _popupFrameHeight) / 2, _popupFrameWidth, _popupFrameHeight);
+  self.popupView.backgroundColor = _backgroundColour;
+  self.popupView.layer.cornerRadius = 10.f;
+  self.view.userInteractionEnabled = YES;
 }
 
 -(void)launchURL:(UIButton *)sender {

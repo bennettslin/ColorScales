@@ -55,6 +55,8 @@
 @property (weak, nonatomic) id<SettingsDelegate> delegate;
 @property (weak, nonatomic) IBOutlet UIView *iPadPopupView;
 
+-(void)presentSettingsViewBasedOnDataModel;
+
 @end
 
 @protocol SettingsDelegate <NSObject>

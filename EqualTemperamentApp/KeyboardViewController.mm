@@ -453,6 +453,7 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 
 -(void)settingsButtonPressed:(UIButton *)sender {
   [self presentChildViewController:_settingsVC];
+  [_settingsVC presentSettingsViewBasedOnDataModel];
 }
 
 -(void)helpButtonPressed:(UIButton *)sender {
