@@ -26,8 +26,6 @@
 		3F9413BE18556EA40067CFBF /* EqualTemperamentAppTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F9413BD18556EA40067CFBF /* EqualTemperamentAppTests.m */; };
 		3F9413CE1855A0C30067CFBF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F9413CD1855A0C30067CFBF /* AudioToolbox.framework */; };
 		3F9413D31855A0F70067CFBF /* mo_audio.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3F9413D01855A0F70067CFBF /* mo_audio.mm */; };
-		3FA82A56186EBA4300A0A32E /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3FA82A55186EBA4300A0A32E /* Default-568h@2x.png */; };
-		3FA82A58186EBB3300A0A32E /* Default@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 3FA82A57186EBB3300A0A32E /* Default@2x~ipad.png */; };
 		3FAA709C1858413A0041268E /* KeyboardViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3FAA709A1858413A0041268E /* KeyboardViewController.mm */; };
 		3FAA709D1858413A0041268E /* KeyboardViewController~iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA709B1858413A0041268E /* KeyboardViewController~iPhone.xib */; };
 		3FAA7189185841EC0041268E /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA709F185841EB0041268E /* AUTHORS */; };
@@ -218,8 +216,6 @@
 		3F9413D01855A0F70067CFBF /* mo_audio.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = mo_audio.mm; sourceTree = "<group>"; };
 		3F9413D11855A0F70067CFBF /* mo_def.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mo_def.h; sourceTree = "<group>"; };
 		3F9413D21855A0F70067CFBF /* momu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = momu.h; sourceTree = "<group>"; };
-		3FA82A55186EBA4300A0A32E /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		3FA82A57186EBB3300A0A32E /* Default@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x~ipad.png"; sourceTree = "<group>"; };
 		3FAA70991858413A0041268E /* KeyboardViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyboardViewController.h; sourceTree = "<group>"; };
 		3FAA709A1858413A0041268E /* KeyboardViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyboardViewController.mm; sourceTree = "<group>"; };
 		3FAA709B1858413A0041268E /* KeyboardViewController~iPhone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "KeyboardViewController~iPhone.xib"; sourceTree = "<group>"; };
@@ -495,8 +491,6 @@
 		3F94138318556EA40067CFBF = {
 			isa = PBXGroup;
 			children = (
-				3FA82A57186EBB3300A0A32E /* Default@2x~ipad.png */,
-				3FA82A55186EBA4300A0A32E /* Default-568h@2x.png */,
 				3F94139518556EA40067CFBF /* EqualTemperamentApp */,
 				3F9413B718556EA40067CFBF /* EqualTemperamentAppTests */,
 				3F94138E18556EA40067CFBF /* Frameworks */,
@@ -1015,14 +1009,12 @@
 				3FAA71A1185841EC0041268E /* mand2.raw in Resources */,
 				3FB3EFAE1866E6A500D008E7 /* HelpViewController~iPad.xib in Resources */,
 				3FAA71A4185841EC0041268E /* mand5.raw in Resources */,
-				3FA82A56186EBA4300A0A32E /* Default-568h@2x.png in Resources */,
 				3FAA71AD185841EC0041268E /* ppksblnk.raw in Resources */,
 				3FAA71A7185841EC0041268E /* mand8.raw in Resources */,
 				3FB3EFAA1866C16C00D008E7 /* KeyboardViewController~iPad.xib in Resources */,
 				3FAA71B6185841EC0041268E /* tomhidrm.raw in Resources */,
 				3FAA71AA185841EC0041268E /* marmstk1.raw in Resources */,
 				3FAA7197185841EC0041268E /* impuls10.raw in Resources */,
-				3FA82A58186EBB3300A0A32E /* Default@2x~ipad.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
