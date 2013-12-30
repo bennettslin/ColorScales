@@ -115,7 +115,7 @@
     fontSize = 18;
   }
   bandTextView.font = [UIFont italicSystemFontOfSize:fontSize];
-  bandTextView.text = @"Bennett Lin plays in Bobtail Yearlings, a chamber folk band in Seattle. Please check out our double album inspired by James Joyce's Ulysses, as well as our comic book album about Rosalind Franklin!";
+  bandTextView.text = @"Bennett Lin plays in Bobtail Yearlings, a chamber folk band based in Seattle. Check out our double album inspired by James Joyce's Ulysses, as well as our comic book album about Rosalind Franklin!";
   bandTextView.textColor = [UIColor brownSettings];
   bandTextView.backgroundColor = [UIColor lighterYellowSettingsBackground];
   bandTextView.editable = NO;
@@ -123,8 +123,6 @@
   bandTextView.frame = CGRectMake(_marginAroundContent, _marginAroundContent + (_paddingYBetweenContent * 2) + aboutTextViewHeight + dividerHeight, contentViewWidth, bandTextViewHeight);
   [bandTextView sizeToFit];
   bandTextViewHeight = bandTextView.frame.size.height;
-  
-    // button to go to band website
 
   UIButton *websiteButton = [UIButton buttonWithType:UIButtonTypeCustom];
   websiteButton.titleLabel.textAlignment = NSTextAlignmentCenter;

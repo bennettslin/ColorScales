@@ -19,10 +19,12 @@
 #define FRAMESIZE 128
 #define NUMCHANNELS 2
 
+NSUInteger _initialVolume;
+
 void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   AudioData *data = (AudioData *)userData;
   for(int i=0; i<framesize; i++) {
-    SAMPLE out = data->myMandolin->tick();
+    SAMPLE out = data->myMandolin->tick() * _initialVolume;
     buffer[2*i] = buffer[2*i+1] = out;
   }
 }
@@ -84,6 +86,30 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   UIButton *_helpButton;
   
   BOOL _hideStatusBar;
+  
+  BOOL _firstPluck;
+}
+
+
+#pragma mark - Audio methods
+
+-(void)pressKey:(Key *)key {
+  if (_firstPluck) {
+    _initialVolume = 1;
+    _firstPluck = NO;
+  }
+    // ONLY call this method from Key instance
+  
+    // logic to sound key
+  float frequency = _lowestTone * pow(2.f, ((float)key.noModScaleDegree) / _tonesPerOctave);
+  audioData.myMandolin->setFrequency(frequency);
+  audioData.myMandolin->pluck(_constantVolume);
+}
+
+-(void)liftKey:(Key *)key {
+    // ONLY call this method from Key instance
+  
+    // logic to silence key will go here, depending on audio engine
 }
 
 #pragma mark - view methods
@@ -110,6 +136,9 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
     _lowestTone = 130.8127826f / 2.f; // C2
   }
   
+  _constantVolume = 0.6f;
+  _firstPluck = YES;
+  
     // instantiates self.dataModel only on very first launch
   NSString *path = [self dataFilePath];
   if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
@@ -128,9 +157,8 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   }
   [self updateKeyboardWithChangedDataModel:self.dataModel];
   
-  _constantVolume = 0.6f;
-  
   audioData.myMandolin = new Mandolin(20);
+  audioData.myMandolin->setPluckPosition(0.5);
     // init the MoAudio layer
   MoAudio::init(SRATE, FRAMESIZE, NUMCHANNELS);
     // start the audio layer, registering a callback method
@@ -309,7 +337,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   for (int thisRow = 0; thisRow < _numberOfGridRows; thisRow++) {
     for (NSInteger nmsd = thisRow * _gridInterval; nmsd < _totalKeysInKeyboard - (_gridInterval * (_numberOfGridRows - (thisRow + 1))); nmsd++) {
       NSNumber *noModScaleDegree = [NSNumber numberWithUnsignedInteger:nmsd];
-//      NSNumber *scaleDegree = [NSNumber numberWithInteger:nmsd % _tonesPerOctave];
       CGRect frame;
       frame = CGRectMake(_scrollViewMargin + _screenMarginSide + ((nmsd - (_gridInterval * thisRow)) * _gridKeyWidth),
                                   _statusBarHeight + (gridKeyHeight * (_numberOfGridRows - (thisRow + 1))), _gridKeyWidth, gridKeyHeight);
@@ -378,8 +405,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [self.view addSubview:roundedButtonsView];
   
   _settingsButton = [[UIButton alloc] initWithFrame:CGRectMake(_marginXBetweenButtons, _marginYBetweenButtons, _buttonSize, _buttonSize)];
-//  _settingsButton.layer.borderWidth = 1.f;
-//  _settingsButton.layer.borderColor = [UIColor blackColor].CGColor;
   _settingsButton.center = CGPointMake((_buttonSize * 0.5f) + _marginXBetweenButtons, _marginYBetweenButtons + (_buttonSize * 0.5f));
   [_settingsButton setImage:[UIImage imageNamed:@"SettingsButton"] forState:UIControlStateNormal];
   [_settingsButton setImage:[UIImage imageNamed:@"SettingsButtonHighlighted"] forState:UIControlStateHighlighted];
@@ -387,8 +412,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   [roundedButtonsView addSubview:_settingsButton];
   
   _helpButton = [[UIButton alloc] initWithFrame:CGRectMake(_buttonSize + (_marginXBetweenButtons * 2), _marginYBetweenButtons, _buttonSize, _buttonSize)];
-//  _helpButton.layer.borderWidth = 1.f;
-//  _helpButton.layer.borderColor = [UIColor blackColor].CGColor;
   _helpButton.center = CGPointMake((_buttonSize * 1.5f) + (_marginXBetweenButtons * 2.f), _marginYBetweenButtons + (_buttonSize * 0.5f));
   [_helpButton setImage:[UIImage imageNamed:@"HelpButton"] forState:UIControlStateNormal];
   [_helpButton setImage:[UIImage imageNamed:@"HelpButtonHighlighted"] forState:UIControlStateHighlighted];
@@ -558,23 +581,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
   return perfectFifth;
 }
 
-#pragma mark - key sounding methods
-
--(void)pressKey:(Key *)key {
-    // ONLY call this method from Key instance
-
-    // logic to sound key
-  float frequency = _lowestTone * pow(2.f, ((float)key.noModScaleDegree) / _tonesPerOctave);
-  audioData.myMandolin->setFrequency(frequency);
-  audioData.myMandolin->pluck(_constantVolume);
-}
-
--(void)liftKey:(Key *)key {
-    // ONLY call this method from Key instance
-  
-    // logic to silence key will go here, depending on audio engine
-}
-
 # pragma mark - updating keys and touches helper methods
 
 -(void)updateTouches {
@@ -710,7 +716,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-//  [self updateTouches];
 }
 
 -(void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
@@ -718,8 +723,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    // kludge way to ensure that all keys are lifted after dragging ended
-//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
   [self updateTouches];
 }
 
@@ -728,8 +731,6 @@ void audioCallback(Float32 *buffer, UInt32 framesize, void *userData) {
 }
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    // kludge way to ensure that all keys are lifted after decelerating ended
-//  [self kludgeMethodToEnsureRemovalOfAllKeysAfterScrolling];
   [self updateTouches];
 }
 

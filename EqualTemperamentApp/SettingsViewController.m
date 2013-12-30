@@ -53,7 +53,6 @@
 -(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
   if (self) {
-//    self.modalPresentationStyle = UIModalTransitionStyleFlipHorizontal;
   }
   return self;
 }
@@ -393,8 +392,6 @@
     NSUInteger numberOfButtons = [buttonsArray count];
     for (NSUInteger buttonIndex = 0; buttonIndex < numberOfButtons; buttonIndex++) {
       UIButton *thisButton = buttonsArray[buttonIndex];
-//      thisButton.layer.borderColor = [UIColor blackColor].CGColor;
-//      thisButton.layer.borderWidth = 1.f;
       
       NSUInteger numberInRow = numberOfButtons;
       if (numberOfButtons > 3) {
@@ -829,8 +826,6 @@
 -(UIView *)createAndAddCoverToView:(UIView *)thisView withBackgroundColour:(UIColor *)colour {
   UIView *cover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, thisView.frame.size.width, thisView.frame.size.height)];
   cover.backgroundColor = colour;
-//  cover.layer.borderColor = [UIColor blackColor].CGColor;
-//  cover.layer.borderWidth = 1.f;
   [thisView addSubview:cover];
   return cover;
 }
@@ -840,11 +835,7 @@
   cover.hidden = NO;
   [UIView animateWithDuration:0.15f delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
     cover.alpha = 1.f;
-    } completion:^(BOOL finished) {
-//    if ([thisView isKindOfClass:[UIPickerView class]]) {
-//      [(UIPickerView *)thisView reloadAllComponents];
-//    }
-  }];
+    } completion:nil];
 }
 
 -(void)uncoverView:(UIView *)thisView fromCover:(UIView *)cover {
